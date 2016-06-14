@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum BlockSize {
     S128,
     S224,
@@ -9,7 +9,7 @@ pub enum BlockSize {
     S512,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum ShaVariant {
     Sha1,
     Sha2(BlockSize),
@@ -18,13 +18,13 @@ pub enum ShaVariant {
     UnknownSha(u8),
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum Blake2Variant {
     B,
     S
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum Code {
     Sha(ShaVariant),
     Blake2(Blake2Variant),

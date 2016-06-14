@@ -3,4 +3,11 @@ name = "supra-multihash"
 version = "0.1.0"
 authors = ["Wim Looman <wim@nemo157.com>"]
 
+[features]
+default = ["validation", "validation_sha2"]
+validation = ["lazy_static"]
+validation_sha2 = ["validation", "sodiumoxide"]
+
 [dependencies]
+lazy_static = { version = "*", optional = true }
+sodiumoxide = { version = "*", optional = true }

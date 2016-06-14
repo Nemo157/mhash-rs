@@ -1,5 +1,10 @@
 use Code;
 
+use std::borrow::Cow;
+
+use validation::Validator;
+use validation::sha2::{Sha256Validator,Sha512Validator};
+
 #[derive(Debug)]
 pub struct MultiHash<D: AsRef<[u8]>> {
     code: Code,
@@ -20,6 +25,16 @@ impl<D: AsRef<[u8]>> MultiHash<D> {
 
     pub fn digest(&self) -> &[u8] {
         self.digest.as_ref()
+    }
+
+    pub fn validate(&self, data: &[u8]) -> Result<bool, Cow<'static, str>> {
+        if self.code.to_byte() == 0x12 {
+            Sha256Validator.validate(self.digest.as_ref(), data)
+        } else if self.code.to_byte() == 0x13 {
+            Sha512Validator.validate(self.digest.as_ref(), data)
+        } else {
+            Err("Unknown code".into())
+        }
     }
 }
 
