@@ -2,10 +2,7 @@
 pub mod sha2;
 
 use std::borrow::Cow;
-use std::collections::HashMap;
 use std::sync::Mutex;
-
-use Code;
 
 pub trait Validator: Sync {
     // TODO: Real error
@@ -13,32 +10,31 @@ pub trait Validator: Sync {
 }
 
 pub struct Validators {
-    store: Mutex<HashMap<Code, &'static Validator>>,
+    store: Mutex<[Option<&'static Validator>; 0x7F]>,
 }
 
 impl Validators {
-    pub fn register(&self, code: Code, validator: &'static Validator) {
-        self.store.lock().unwrap().insert(code, validator);
+    pub fn register(&self, code: u8, validator: &'static Validator) {
+        self.store.lock().unwrap()[code as usize] = Some(validator);
     }
 
-    pub fn get(&self, code: Code) -> Option<&'static Validator> {
-        self.store.lock().unwrap().get(&code).map(|&a|a)
+    pub fn get(&self, code: u8) -> Option<&'static Validator> {
+        self.store.lock().unwrap()[code as usize]
     }
 }
 
 #[cfg(not(feature = "validation_sha2"))]
 lazy_static! {
-    pub static ref VALIDATORS: Validators = Validators { store: Mutex::new(HashMap::new()) };
+    pub static ref VALIDATORS: Validators = Validators { store: Mutex::new([None; 0x7F]) };
 }
 
 #[cfg(feature = "validation_sha2")]
 lazy_static! {
     pub static ref VALIDATORS: Validators = {
-        let validators = Validators { store: Mutex::new(HashMap::new()) };
+        let validators = Validators { store: Mutex::new([None; 0x7F]) };
         {
-            use code::{ ShaVariant, BlockSize };
-            validators.register(Code::Sha(ShaVariant::Sha2(BlockSize::S256)), &sha2::SHA256_VALIDATOR);
-            validators.register(Code::Sha(ShaVariant::Sha2(BlockSize::S512)), &sha2::SHA512_VALIDATOR);
+            validators.register(0x12, &sha2::SHA256_VALIDATOR);
+            validators.register(0x13, &sha2::SHA512_VALIDATOR);
         }
         validators
     };

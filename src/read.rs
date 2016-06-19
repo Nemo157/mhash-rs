@@ -1,14 +1,13 @@
 use std::io;
 
-use { Code, MultiHash };
+use { Digest, MultiHash };
 
 trait ReadHelper {
     fn read_byte(&mut self) -> io::Result<u8>;
 }
 
 pub trait ReadMultiHash {
-    fn read_multihash_code(&mut self) -> io::Result<Code>;
-    fn read_multihash(&mut self) -> io::Result<MultiHash<'static>>;
+    fn read_multihash(&mut self) -> io::Result<MultiHash>;
 }
 
 impl<R: io::Read> ReadHelper for R {
@@ -20,33 +19,33 @@ impl<R: io::Read> ReadHelper for R {
 }
 
 impl<R: io::Read> ReadMultiHash for R {
-    fn read_multihash_code(&mut self) -> io::Result<Code> {
-        Code::from_byte(try!(self.read_byte()))
-           .map_err(|err| io::Error::new(io::ErrorKind::Other, err))
-    }
-
-    fn read_multihash(&mut self) -> io::Result<MultiHash<'static>> {
-        let code = try!(self.read_multihash_code());
+    fn read_multihash(&mut self) -> io::Result<MultiHash> {
+        let code = try!(self.read_byte());
         let length = try!(self.read_byte()) as usize;
-        let mut buffer = Vec::with_capacity(length);
-        buffer.resize(length, 0);
-        try!(self.read_exact(&mut buffer));
+        let mut digest = try!(Digest::from_code_and_length(code, length)
+               .map_err(|err| io::Error::new(io::ErrorKind::Other, err)));
+        try!(self.read_exact(&mut digest.mut_bytes()[..length]));
 
-        Ok(MultiHash::new(code, buffer.into()))
+        Ok(MultiHash::new(length, digest))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::borrow::Cow;
-    use { Code, MultiHash, ShaVariant, ReadMultiHash };
+    use { Digest, MultiHash, ReadMultiHash };
 
     #[test]
     fn valid() {
-        let digest = vec![0xde, 0xad, 0xbe, 0xef];
+        let digest = [
+            0xde, 0xad, 0xbe, 0xef,
+            0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00,
+        ];
         let mut buffer: &[u8] = &[0x11, 0x04, 0xde, 0xad, 0xbe, 0xef];
         assert_eq!(
-            MultiHash::new(Code::Sha(ShaVariant::Sha1), Cow::Owned(digest)),
+            MultiHash::new(4, Digest::Sha1(digest)),
             buffer.read_multihash().unwrap());
     }
 
@@ -71,6 +70,18 @@ mod tests {
     #[test]
     fn short_digest() {
         let mut buffer: &[u8] = &[0x11, 0x05, 0xde, 0xad, 0xbe, 0xef];
+        assert!(buffer.read_multihash().is_err());
+    }
+
+    #[test]
+    fn long_digest() {
+        let mut buffer: &[u8] = &[
+            0x11, 0x20,
+            0xde, 0xad, 0xbe, 0xef, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        ];
         assert!(buffer.read_multihash().is_err());
     }
 }
