@@ -44,6 +44,11 @@ impl<'a> MultiHash<'a> {
         &*self.digest
     }
 
+    /// The length of this multihash when writing to a byte stream
+    pub fn len(&self) -> usize {
+        self.digest.len() + 2
+    }
+
     #[cfg(all(feature = "validation", feature = "validation-sha2"))]
     pub fn validate(&self, data: &[u8]) -> Result<bool, Cow<'static, str>> {
         if self.code.to_byte() == 0x12 {
