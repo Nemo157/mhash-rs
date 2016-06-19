@@ -8,7 +8,7 @@ trait ReadHelper {
 
 pub trait ReadMultiHash {
     fn read_multihash_code(&mut self) -> io::Result<Code>;
-    fn read_multihash(&mut self) -> io::Result<MultiHash<Vec<u8>>>;
+    fn read_multihash(&mut self) -> io::Result<MultiHash<'static>>;
 }
 
 impl<R: io::Read> ReadHelper for R {
@@ -25,19 +25,20 @@ impl<R: io::Read> ReadMultiHash for R {
            .map_err(|err| io::Error::new(io::ErrorKind::Other, err))
     }
 
-    fn read_multihash(&mut self) -> io::Result<MultiHash<Vec<u8>>> {
+    fn read_multihash(&mut self) -> io::Result<MultiHash<'static>> {
         let code = try!(self.read_multihash_code());
         let length = try!(self.read_byte()) as usize;
         let mut buffer = Vec::with_capacity(length);
         buffer.resize(length, 0);
         try!(self.read_exact(&mut buffer));
 
-        Ok(MultiHash::new(code, buffer))
+        Ok(MultiHash::new(code, buffer.into()))
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::borrow::Cow;
     use { Code, MultiHash, ShaVariant, ReadMultiHash };
 
     #[test]
@@ -45,7 +46,7 @@ mod tests {
         let digest = vec![0xde, 0xad, 0xbe, 0xef];
         let mut buffer: &[u8] = &[0x11, 0x04, 0xde, 0xad, 0xbe, 0xef];
         assert_eq!(
-            MultiHash::new(Code::Sha(ShaVariant::Sha1), digest),
+            MultiHash::new(Code::Sha(ShaVariant::Sha1), Cow::Owned(digest)),
             buffer.read_multihash().unwrap());
     }
 

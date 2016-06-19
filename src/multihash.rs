@@ -1,22 +1,39 @@
-use Code;
-
 use std::borrow::Cow;
 
+use Code;
+
+#[cfg(all(feature = "validation", feature = "validation-sha2"))]
 use validation::Validator;
+
+#[cfg(all(feature = "validation", feature = "validation-sha2"))]
 use validation::sha2::{Sha256Validator,Sha512Validator};
 
 #[derive(Debug)]
-pub struct MultiHash<D: AsRef<[u8]>> {
+pub struct MultiHash<'a> {
     code: Code,
-    digest: D
+    digest: Cow<'a, [u8]>,
 }
 
-impl<D: AsRef<[u8]>> MultiHash<D> {
-    pub fn new(code: Code, digest: D) -> MultiHash<D> {
+impl<'a> MultiHash<'a> {
+    pub fn new(code: Code, digest: Cow<'a, [u8]>) -> MultiHash<'a> {
         MultiHash {
             code: code,
             digest: digest,
         }
+    }
+
+    // TODO: Return real error
+    pub fn decode(buffer: &[u8]) -> Result<MultiHash, &'static str> {
+        if buffer.len() < 1 { return Err("No code"); }
+        if buffer.len() < 2 { return Err("No length"); }
+        let code = try!(Code::from_byte(buffer[0]));
+        let length = buffer[1] as usize;
+        if buffer.len() != length + 2 { return Err("Wrong length") }
+
+        Ok(MultiHash {
+            code: code,
+            digest: Cow::Borrowed(&buffer[2..]),
+        })
     }
 
     pub fn code(&self) -> Code {
@@ -24,9 +41,10 @@ impl<D: AsRef<[u8]>> MultiHash<D> {
     }
 
     pub fn digest(&self) -> &[u8] {
-        self.digest.as_ref()
+        &*self.digest
     }
 
+    #[cfg(all(feature = "validation", feature = "validation-sha2"))]
     pub fn validate(&self, data: &[u8]) -> Result<bool, Cow<'static, str>> {
         if self.code.to_byte() == 0x12 {
             Sha256Validator.validate(self.digest.as_ref(), data)
@@ -38,24 +56,8 @@ impl<D: AsRef<[u8]>> MultiHash<D> {
     }
 }
 
-impl<'a> MultiHash<&'a [u8]> {
-    // TODO: Return real error
-    pub fn decode(buffer: &'a [u8]) -> Result<MultiHash<&'a [u8]>, &'static str> {
-        if buffer.len() < 1 { return Err("No code"); }
-        if buffer.len() < 2 { return Err("No length"); }
-        let code = try!(Code::from_byte(buffer[0]));
-        let length = buffer[1] as usize;
-        if buffer.len() != length + 2 { return Err("Wrong length") }
-
-        Ok(MultiHash {
-            code: code,
-            digest: &buffer[2..]
-        })
-    }
-}
-
-impl<D: AsRef<[u8]>> Eq for MultiHash<D> {}
-impl<D: AsRef<[u8]>> PartialEq for MultiHash<D> {
+impl<'a> Eq for MultiHash<'a> {}
+impl<'a> PartialEq for MultiHash<'a> {
     fn eq(&self, other: &Self) -> bool {
         self.code == other.code
             && self.digest().len() == other.digest().len()
@@ -65,6 +67,7 @@ impl<D: AsRef<[u8]>> PartialEq for MultiHash<D> {
 
 #[cfg(test)]
 mod tests {
+    use std::borrow::Cow;
     use { Code, MultiHash, ShaVariant };
 
     #[test]
@@ -72,7 +75,7 @@ mod tests {
         let digest: &[u8] = &[0xde, 0xad, 0xbe, 0xef];
         let buffer: &[u8] = &[0x11, 0x04, 0xde, 0xad, 0xbe, 0xef];
         assert_eq!(
-            Ok(MultiHash::new(Code::Sha(ShaVariant::Sha1), digest)),
+            Ok(MultiHash::new(Code::Sha(ShaVariant::Sha1), Cow::Borrowed(digest))),
             MultiHash::decode(buffer));
     }
 
