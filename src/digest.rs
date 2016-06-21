@@ -39,11 +39,8 @@ impl Digest {
             0x40 if length <= 64 => Ok(Blake2B([0; 64])),
             0x41 if length <= 32 => Ok(Blake2S([0; 32])),
 
-            _ if code < 0x10 && length < 0x7f => {
-                let mut bytes = Vec::with_capacity(length);
-                bytes.resize(length, 0);
-                Ok(ApplicationSpecific { code: code, bytes: bytes })
-            }
+            _ if code < 0x10 && length < 0x7f =>
+                Ok(ApplicationSpecific { code: code, bytes: vec![0; length] }),
             _ if code > 0x7f => Err("Codes greater than 0x7f are an unsupported future feature"),
             _ => Err("Digest length exceeds allowed length for specified type"),
         }
