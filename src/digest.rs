@@ -25,25 +25,29 @@ impl Digest {
     // TODO: Real error type
     /// Returns an empty digest of the specified type, validates code and length
     pub fn from_code_and_length(code: u8, length: usize) -> Result<Digest, &'static str> {
-        match code {
-            0x11 if length <= 20 => Ok(Sha1([0; 20])),
-            0x12 if length <= 32 => Ok(Sha2_256([0; 32])),
-            0x13 if length <= 64 => Ok(Sha2_512([0; 64])),
-            0x14 if length <= 64 => Ok(Sha3_512([0; 64])),
-            0x15 if length <= 48 => Ok(Sha3_384([0; 48])),
-            0x16 if length <= 32 => Ok(Sha3_256([0; 32])),
-            0x17 if length <= 28 => Ok(Sha3_224([0; 28])),
-            0x18 if length <= 16 => Ok(Shake128([0; 16])),
-            0x19 if length <= 32 => Ok(Shake256([0; 32])),
+        Ok(match code {
+            0x11 if length <= 20 => Sha1([0; 20]),
+            0x12 if length <= 32 => Sha2_256([0; 32]),
+            0x13 if length <= 64 => Sha2_512([0; 64]),
+            0x14 if length <= 64 => Sha3_512([0; 64]),
+            0x15 if length <= 48 => Sha3_384([0; 48]),
+            0x16 if length <= 32 => Sha3_256([0; 32]),
+            0x17 if length <= 28 => Sha3_224([0; 28]),
+            0x18 if length <= 16 => Shake128([0; 16]),
+            0x19 if length <= 32 => Shake256([0; 32]),
 
-            0x40 if length <= 64 => Ok(Blake2B([0; 64])),
-            0x41 if length <= 32 => Ok(Blake2S([0; 32])),
+            0x40 if length <= 64 => Blake2B([0; 64]),
+            0x41 if length <= 32 => Blake2S([0; 32]),
 
             _ if code < 0x10 && length < 0x7f =>
-                Ok(ApplicationSpecific { code: code, bytes: vec![0; length] }),
-            _ if code > 0x7f => Err("Codes greater than 0x7f are an unsupported future feature"),
-            _ => Err("Digest length exceeds allowed length for specified type"),
-        }
+                ApplicationSpecific { code: code, bytes: vec![0; length] },
+            _ if code > 0x7f => {
+                return Err("Codes greater than 0x7f are an unsupported future feature")
+            }
+            _ => {
+                return Err("Digest length exceeds allowed length for specified type")
+            }
+        })
     }
 
     pub fn code(&self) -> u8 {
