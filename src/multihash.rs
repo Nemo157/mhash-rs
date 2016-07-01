@@ -17,18 +17,27 @@ impl MultiHash {
     }
 
     #[cfg(feature = "generation")]
-    pub fn generate(data: &[u8]) -> generation::Result {
-        generation::generate(data)
+    fn new_full_digest(digest: Digest) -> MultiHash {
+        MultiHash {
+            length: digest.bytes().len(),
+            digest: digest,
+        }
     }
 
     #[cfg(all(feature = "generation", feature = "sha2"))]
-    pub fn generate_sha256(data: &[u8]) -> generation::Result {
-        generation::generate_sha256(data)
+    // Default algorithm is sha256 for now...
+    pub fn generate(data: &[u8]) -> MultiHash {
+        MultiHash::new_full_digest(generation::generate_sha256(data))
     }
 
     #[cfg(all(feature = "generation", feature = "sha2"))]
-    pub fn generate_sha512(data: &[u8]) -> generation::Result {
-        generation::generate_sha512(data)
+    pub fn generate_sha256(data: &[u8]) -> MultiHash {
+        MultiHash::new_full_digest(generation::generate_sha256(data))
+    }
+
+    #[cfg(all(feature = "generation", feature = "sha2"))]
+    pub fn generate_sha512(data: &[u8]) -> MultiHash {
+        MultiHash::new_full_digest(generation::generate_sha512(data))
     }
 
     pub fn code(&self) -> u8 {
