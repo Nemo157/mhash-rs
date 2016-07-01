@@ -1,41 +1,29 @@
 #[cfg(feature = "validation_sha2")]
-pub mod sha2;
+mod sha2;
 
 use std::borrow::Cow;
-use std::sync::Mutex;
+use std::result;
+
+use digest::Digest;
+
+pub type Error = Cow<'static, str>; // TODO: Real error type
+pub type Result = result::Result<bool, Error>;
 
 pub trait Validator: Sync {
-    // TODO: Real error
-    fn validate(&self, digest: &[u8], data: &[u8]) -> Result<bool, Cow<'static, str>>;
-}
-
-pub struct Validators {
-    store: Mutex<[Option<&'static Validator>; 0x7F]>,
-}
-
-impl Validators {
-    pub fn register(&self, code: u8, validator: &'static Validator) {
-        self.store.lock().unwrap()[code as usize] = Some(validator);
-    }
-
-    pub fn get(&self, code: u8) -> Option<&'static Validator> {
-        self.store.lock().unwrap()[code as usize]
-    }
+    fn validate(&self, digest: &[u8], data: &[u8]) -> Result;
 }
 
 #[cfg(not(feature = "validation_sha2"))]
-lazy_static! {
-    pub static ref VALIDATORS: Validators = Validators { store: Mutex::new([None; 0x7F]) };
+pub fn get_validator(_digest: &Digest) -> Option<&'static Validator> {
+    None
 }
 
 #[cfg(feature = "validation_sha2")]
-lazy_static! {
-    pub static ref VALIDATORS: Validators = {
-        let validators = Validators { store: Mutex::new([None; 0x7F]) };
-        {
-            validators.register(0x12, &sha2::SHA256_VALIDATOR);
-            validators.register(0x13, &sha2::SHA512_VALIDATOR);
-        }
-        validators
-    };
+pub fn get_validator(digest: &Digest) -> Option<&'static Validator> {
+    use digest::Digest::*;
+    Some(match *digest {
+        Sha2_256(_) => sha2::SHA256_VALIDATOR,
+        Sha2_512(_) => sha2::SHA512_VALIDATOR,
+        _ => { return None; }
+    })
 }

@@ -1,9 +1,6 @@
-#[cfg(all(feature = "validation", feature = "validation_sha2"))]
-use std::borrow::Cow;
-
-use Digest;
-#[cfg(all(feature = "validation", feature = "validation_sha2"))]
-use validation::VALIDATORS;
+use digest::Digest;
+#[cfg(feature = "validation")]
+use validation;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct MultiHash {
@@ -44,9 +41,11 @@ impl MultiHash {
         self.length + 2
     }
 
-    #[cfg(all(feature = "validation", feature = "validation_sha2"))]
-    pub fn validate(&self, data: &[u8]) -> Result<bool, Cow<'static, str>> {
-        let validator = try!(VALIDATORS.get(self.code()).ok_or_else(|| Cow::Borrowed("no validator")));
-        validator.validate(self.digest_bytes(), data)
+    /// Returns None if there is no validator for this digest type, otherwise
+    /// the result of the validator
+    #[cfg(feature = "validation")]
+    pub fn validate(&self, data: &[u8]) -> Option<validation::Result> {
+        validation::get_validator(self.digest())
+            .map(|v| v.validate(self.digest_bytes(), data))
     }
 }
