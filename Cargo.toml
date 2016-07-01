@@ -5,9 +5,9 @@ authors = ["Wim Looman <wim@nemo157.com>"]
 
 [features]
 default = []
-validation = ["lazy_static"]
-validation_sha2 = ["sodiumoxide"]
+validation = []
+generation = []
+sha2 = ["sodiumoxide"]
 
 [dependencies]
-lazy_static = { version = "*", optional = true }
 sodiumoxide = { version = "*", optional = true }

@@ -1,6 +1,6 @@
 use digest::Digest;
-#[cfg(feature = "validation")]
-use validation;
+#[cfg(feature = "generation")] use generation;
+#[cfg(feature = "validation")] use validation;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct MultiHash {
@@ -14,6 +14,21 @@ impl MultiHash {
             length: length,
             digest: digest,
         }
+    }
+
+    #[cfg(feature = "generation")]
+    pub fn generate(data: &[u8]) -> generation::Result {
+        generation::generate(data)
+    }
+
+    #[cfg(all(feature = "generation", feature = "sha2"))]
+    pub fn generate_sha256(data: &[u8]) -> generation::Result {
+        generation::generate_sha256(data)
+    }
+
+    #[cfg(all(feature = "generation", feature = "sha2"))]
+    pub fn generate_sha512(data: &[u8]) -> generation::Result {
+        generation::generate_sha512(data)
     }
 
     pub fn code(&self) -> u8 {
@@ -45,7 +60,6 @@ impl MultiHash {
     /// the result of the validator
     #[cfg(feature = "validation")]
     pub fn validate(&self, data: &[u8]) -> Option<validation::Result> {
-        validation::get_validator(self.digest())
-            .map(|v| v.validate(self.digest_bytes(), data))
+        validation::validate(self, data)
     }
 }

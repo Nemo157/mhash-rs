@@ -1,29 +1,12 @@
 use sodiumoxide::crypto::hash::{ sha256, sha512 };
 
-use validation::{ self, Validator };
+use validation;
+use MultiHash;
 
-struct Sha256Validator;
-struct Sha512Validator;
-
-pub static SHA256_VALIDATOR: &'static Validator = &Sha256Validator;
-pub static SHA512_VALIDATOR: &'static Validator = &Sha512Validator;
-
-impl Validator for Sha256Validator {
-    fn validate(&self, digest: &[u8], data: &[u8]) -> validation::Result {
-        let hash = sha256::hash(data);
-        if digest.len() > hash.as_ref().len() {
-            return Err("Digest too long".into());
-        }
-        Ok(digest[..] == hash[..digest.len()])
-    }
+pub fn validate_sha256(multihash: &MultiHash, data: &[u8]) -> validation::Result {
+    validation::validate_base(multihash, &sha256::hash(data).0)
 }
 
-impl Validator for Sha512Validator {
-    fn validate(&self, digest: &[u8], data: &[u8]) -> validation::Result {
-        let hash = sha512::hash(data);
-        if digest.len() > hash.as_ref().len() {
-            return Err("Digest too long".into());
-        }
-        Ok(digest[..] == hash[..digest.len()])
-    }
+pub fn validate_sha512(multihash: &MultiHash, data: &[u8]) -> validation::Result {
+    validation::validate_base(multihash, &sha512::hash(data).0)
 }
