@@ -26,18 +26,18 @@ impl MultiHash {
 
     #[cfg(all(feature = "generation", feature = "sha2"))]
     // Default algorithm is sha256 for now...
-    pub fn generate(data: &[u8]) -> MultiHash {
-        MultiHash::new_full_digest(generation::generate_sha256(data))
+    pub fn generate<D: AsRef<[u8]>>(data: D) -> MultiHash {
+        MultiHash::new_full_digest(generation::generate_sha256(data.as_ref()))
     }
 
     #[cfg(all(feature = "generation", feature = "sha2"))]
-    pub fn generate_sha256(data: &[u8]) -> MultiHash {
-        MultiHash::new_full_digest(generation::generate_sha256(data))
+    pub fn generate_sha256<D: AsRef<[u8]>>(data: D) -> MultiHash {
+        MultiHash::new_full_digest(generation::generate_sha256(data.as_ref()))
     }
 
     #[cfg(all(feature = "generation", feature = "sha2"))]
-    pub fn generate_sha512(data: &[u8]) -> MultiHash {
-        MultiHash::new_full_digest(generation::generate_sha512(data))
+    pub fn generate_sha512<D: AsRef<[u8]>>(data: D) -> MultiHash {
+        MultiHash::new_full_digest(generation::generate_sha512(data.as_ref()))
     }
 
     pub fn code(&self) -> u8 {
@@ -68,7 +68,7 @@ impl MultiHash {
     /// Returns None if there is no validator for this digest type, otherwise
     /// the result of the validator
     #[cfg(feature = "validation")]
-    pub fn validate(&self, data: &[u8]) -> Option<validation::Result> {
-        validation::validate(self, data)
+    pub fn validate<D: AsRef<[u8]>>(&self, data: D) -> Option<validation::Result> {
+        validation::validate(self, data.as_ref())
     }
 }

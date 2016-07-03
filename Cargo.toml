@@ -8,6 +8,7 @@ default = []
 validation = []
 generation = []
 sha2 = ["sodiumoxide"]
+all = ["validation", "generation", "sha2"]
 
 [dependencies]
 sodiumoxide = { version = "*", optional = true }
