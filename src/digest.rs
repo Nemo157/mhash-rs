@@ -128,7 +128,13 @@ impl Digest {
 
 impl fmt::Debug for Digest {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_tuple(self.name()).field(&self.bytes().to_vec()).finish()
+        try!(f.write_str(self.name()));
+        try!(f.write_str("(\""));
+        for byte in self.bytes() {
+            try!(write!(f, "{:x}", byte));
+        }
+        try!(f.write_str("\")"));
+        Ok(())
     }
 }
 
