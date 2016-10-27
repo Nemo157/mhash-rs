@@ -25,6 +25,15 @@ pub enum MultiHash {
 }
 
 impl MultiHash {
+    pub fn from_bytes<B: AsRef<[u8]>>(bytes: B) -> Result<MultiHash, &'static str> {
+        let bytes = bytes.as_ref();
+        let code = bytes[0];
+        let length = bytes[1] as usize;
+        let mut hash = try!(MultiHash::from_code_and_length(code, length));
+        hash.digest_mut()[..length].copy_from_slice(&bytes[2..length+2]);
+        Ok(hash)
+    }
+
     // TODO: Real error type
     /// Returns an empty multihash of the specified type, validates code and length
     pub fn from_code_and_length(code: u8, length: usize) -> Result<MultiHash, &'static str> {
@@ -166,6 +175,25 @@ impl MultiHash {
             ApplicationSpecific { ref mut bytes, .. } => bytes,
         }
     }
+
+    pub fn into_bytes(self) -> Vec<u8> {
+        if let ApplicationSpecific { code, mut bytes } = self {
+            let length = bytes.len() as u8;
+            bytes.insert(0, code);
+            bytes.insert(1, length);
+            bytes
+        } else {
+            self.to_bytes()
+        }
+    }
+
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let mut bytes = Vec::with_capacity(self.len() + 2);
+        bytes.push(self.code());
+        bytes.push(self.len() as u8);
+        bytes.extend_from_slice(self.digest());
+        bytes
+    }
 }
 
 impl fmt::Debug for MultiHash {
@@ -223,5 +251,38 @@ impl PartialEq for MultiHash {
             ) => left_code == right_code && left == right,
             _ => false,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use MultiHash;
+
+    #[test]
+    fn to_bytes() {
+        let multihash = MultiHash::Sha1([
+            0xde, 0xad, 0xbe, 0xef,
+            0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00,
+        ], 4);
+        assert_eq!(
+            multihash.to_bytes(),
+            vec![0x11, 0x04, 0xde, 0xad, 0xbe, 0xef]);
+    }
+
+    #[test]
+    fn from_bytes() {
+        let multihash = MultiHash::Sha1([
+            0xde, 0xad, 0xbe, 0xef,
+            0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00,
+        ], 4);
+        assert_eq!(
+            Ok(multihash),
+            MultiHash::from_bytes([0x11, 0x04, 0xde, 0xad, 0xbe, 0xef]));
     }
 }
