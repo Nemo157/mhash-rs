@@ -11,4 +11,6 @@ sha2 = ["sodiumoxide"]
 all = ["validation", "generation", "sha2"]
 
 [dependencies]
+futures = "*"
+tokio-ext = { path = "../tokio-ext" }
 sodiumoxide = { version = "*", optional = true }

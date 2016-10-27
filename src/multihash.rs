@@ -4,22 +4,12 @@ use digest::Digest;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct MultiHash {
-    length: usize,
     digest: Digest,
 }
 
 impl MultiHash {
-    pub fn new(length: usize, digest: Digest) -> MultiHash {
+    pub fn new(digest: Digest) -> MultiHash {
         MultiHash {
-            length: length,
-            digest: digest,
-        }
-    }
-
-    #[cfg(feature = "generation")]
-    fn new_full_digest(digest: Digest) -> MultiHash {
-        MultiHash {
-            length: digest.bytes().len(),
             digest: digest,
         }
     }
@@ -27,17 +17,17 @@ impl MultiHash {
     #[cfg(all(feature = "generation", feature = "sha2"))]
     // Default algorithm is sha256 for now...
     pub fn generate<D: AsRef<[u8]>>(data: D) -> MultiHash {
-        MultiHash::new_full_digest(generation::generate_sha256(data.as_ref()))
+        MultiHash::new(generation::generate_sha256(data.as_ref()))
     }
 
     #[cfg(all(feature = "generation", feature = "sha2"))]
     pub fn generate_sha256<D: AsRef<[u8]>>(data: D) -> MultiHash {
-        MultiHash::new_full_digest(generation::generate_sha256(data.as_ref()))
+        MultiHash::new(generation::generate_sha256(data.as_ref()))
     }
 
     #[cfg(all(feature = "generation", feature = "sha2"))]
     pub fn generate_sha512<D: AsRef<[u8]>>(data: D) -> MultiHash {
-        MultiHash::new_full_digest(generation::generate_sha512(data.as_ref()))
+        MultiHash::new(generation::generate_sha512(data.as_ref()))
     }
 
     pub fn code(&self) -> u8 {
@@ -49,11 +39,11 @@ impl MultiHash {
     }
 
     pub fn digest_bytes(&self) -> &[u8] {
-        &self.digest.bytes()[..self.length]
+        &self.digest.as_ref()
     }
 
     pub fn digest_length(&self) -> usize {
-        self.length
+        self.digest.len()
     }
 
     pub fn digest(&self) -> &Digest {
@@ -62,7 +52,7 @@ impl MultiHash {
 
     /// The length of this multihash when writing to a byte stream
     pub fn total_length(&self) -> usize {
-        self.length + 2
+        self.digest_length() + 2
     }
 
     /// Returns None if there is no validator for this digest type, otherwise
