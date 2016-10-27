@@ -188,11 +188,16 @@ impl MultiHash {
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {
-        let mut bytes = Vec::with_capacity(self.len() + 2);
+        let mut bytes = Vec::with_capacity(self.output_len());
         bytes.push(self.code());
         bytes.push(self.len() as u8);
         bytes.extend_from_slice(self.digest());
         bytes
+    }
+
+    /// The length of this multihash when serialized to a byte array/stream
+    pub fn output_len(&self) -> usize {
+        self.len() + 2
     }
 }
 
