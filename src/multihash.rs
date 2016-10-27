@@ -55,17 +55,17 @@ impl MultiHash {
 
     #[cfg(all(feature = "generation"))]
     pub fn generate<D: AsRef<[u8]>>(data: D) -> MultiHash {
-        generation::generate_default(data.as_ref())
+        generation::generate_default(data.digest())
     }
 
     #[cfg(all(feature = "generation", feature = "sha2"))]
     pub fn generate_sha256<D: AsRef<[u8]>>(data: D) -> MultiHash {
-        generation::generate_sha256(data.as_ref())
+        generation::generate_sha256(data.digest())
     }
 
     #[cfg(all(feature = "generation", feature = "sha2"))]
     pub fn generate_sha512<D: AsRef<[u8]>>(data: D) -> MultiHash {
-        generation::generate_sha512(data.as_ref())
+        generation::generate_sha512(data.digest())
     }
 
     pub fn len(&self) -> usize {
@@ -130,13 +130,10 @@ impl MultiHash {
     /// the result of the validator
     #[cfg(feature = "validation")]
     pub fn validate<D: AsRef<[u8]>>(&self, data: D) -> Option<validation::Result> {
-        validation::validate(self, data.as_ref())
+        validation::validate(self, data.digest())
     }
-}
 
-
-impl AsRef<[u8]> for MultiHash {
-    fn as_ref(&self) -> &[u8] {
+    pub fn digest(&self) -> &[u8] {
         match *self {
             Sha1(ref bytes, length) => &bytes[..length],
             Sha2_256(ref bytes, length) => &bytes[..length],
@@ -152,10 +149,8 @@ impl AsRef<[u8]> for MultiHash {
             ApplicationSpecific { ref bytes, .. } => bytes,
         }
     }
-}
 
-impl AsMut<[u8]> for MultiHash {
-    fn as_mut(&mut self) -> &mut [u8] {
+    pub fn digest_mut(&mut self) -> &mut [u8] {
         match *self {
             Sha1(ref mut bytes, length) => &mut bytes[..length],
             Sha2_256(ref mut bytes, length) => &mut bytes[..length],
@@ -177,7 +172,7 @@ impl fmt::Debug for MultiHash {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         try!(f.write_str(self.name()));
         try!(f.write_str("(\""));
-        for byte in self.as_ref() {
+        for byte in self.digest() {
             try!(write!(f, "{:x}", byte));
         }
         try!(f.write_str("\")"));

@@ -24,7 +24,7 @@ impl<R: io::Read> ReadMultiHash for R {
         let length = try!(self.read_byte()) as usize;
         let mut hash = try!(MultiHash::from_code_and_length(code, length)
                .map_err(|err| io::Error::new(io::ErrorKind::Other, err)));
-        try!(self.read_exact(&mut hash.as_mut()[..length]));
+        try!(self.read_exact(&mut hash.digest_mut()[..length]));
 
         Ok(hash)
     }

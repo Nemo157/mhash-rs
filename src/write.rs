@@ -21,7 +21,7 @@ impl<R> WriteMultiHash for R where R: io::Write {
     fn write_multihash(&mut self, multihash: &MultiHash) -> io::Result<()> {
         try!(self.write_byte(multihash.code()));
         try!(self.write_byte(multihash.len() as u8));
-        try!(self.write_all(multihash.as_ref()));
+        try!(self.write_all(multihash.digest()));
         Ok(())
     }
 }
