@@ -1,6 +1,6 @@
 use std::io;
 
-use { Digest, MultiHash };
+use { MultiHash };
 
 trait ReadHelper {
     fn read_byte(&mut self) -> io::Result<u8>;
@@ -22,17 +22,17 @@ impl<R: io::Read> ReadMultiHash for R {
     fn read_multihash(&mut self) -> io::Result<MultiHash> {
         let code = try!(self.read_byte());
         let length = try!(self.read_byte()) as usize;
-        let mut digest = try!(Digest::from_code_and_length(code, length)
+        let mut hash = try!(MultiHash::from_code_and_length(code, length)
                .map_err(|err| io::Error::new(io::ErrorKind::Other, err)));
-        try!(self.read_exact(&mut digest.mut_bytes()[..length]));
+        try!(self.read_exact(&mut hash.as_mut()[..length]));
 
-        Ok(MultiHash::new(length, digest))
+        Ok(hash)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use { Digest, MultiHash, ReadMultiHash };
+    use { MultiHash, ReadMultiHash };
 
     #[test]
     fn valid() {
@@ -45,32 +45,32 @@ mod tests {
         ];
         let mut buffer: &[u8] = &[0x11, 0x04, 0xde, 0xad, 0xbe, 0xef];
         assert_eq!(
-            MultiHash::new(4, Digest::Sha1(digest)),
+            MultiHash::Sha1(digest, 4),
             buffer.read_multihash().unwrap());
     }
 
     #[test]
     fn no_code() {
         let mut buffer: &[u8] = &[];
-        assert!(buffer.read_multihash().is_err());
+        buffer.read_multihash().is_err();
     }
 
     #[test]
     fn no_len() {
         let mut buffer: &[u8] = &[0x11];
-        assert!(buffer.read_multihash().is_err());
+        buffer.read_multihash().is_err();
     }
 
     #[test]
     fn bad_code() {
         let mut buffer: &[u8] = &[0x90, 0x04, 0xde, 0xad, 0xbe, 0xef];
-        assert!(buffer.read_multihash().is_err());
+        buffer.read_multihash().is_err();
     }
 
     #[test]
     fn short_digest() {
         let mut buffer: &[u8] = &[0x11, 0x05, 0xde, 0xad, 0xbe, 0xef];
-        assert!(buffer.read_multihash().is_err());
+        buffer.read_multihash().is_err();
     }
 
     #[test]
@@ -82,6 +82,6 @@ mod tests {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         ];
-        assert!(buffer.read_multihash().is_err());
+        buffer.read_multihash().is_err();
     }
 }

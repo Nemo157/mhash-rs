@@ -1,7 +1,9 @@
+#![feature(conservative_impl_trait)]
+#![feature(slice_patterns)]
+
 #[cfg(feature = "sha2")]
 extern crate sodiumoxide;
 
-mod digest;
 mod multihash;
 
 mod read;
@@ -13,7 +15,6 @@ pub mod validation;
 #[cfg(feature = "generation")]
 pub mod generation;
 
-pub use digest::Digest;
 pub use multihash::MultiHash;
 
 pub use read::ReadMultiHash;
