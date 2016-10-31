@@ -64,17 +64,17 @@ impl MultiHash {
 
     #[cfg(all(feature = "generation"))]
     pub fn generate<D: AsRef<[u8]>>(data: D) -> MultiHash {
-        generation::generate_default(data.digest())
+        generation::generate_default(data.as_ref())
     }
 
     #[cfg(all(feature = "generation", feature = "sha2"))]
     pub fn generate_sha256<D: AsRef<[u8]>>(data: D) -> MultiHash {
-        generation::generate_sha256(data.digest())
+        generation::generate_sha256(data.as_ref())
     }
 
     #[cfg(all(feature = "generation", feature = "sha2"))]
     pub fn generate_sha512<D: AsRef<[u8]>>(data: D) -> MultiHash {
-        generation::generate_sha512(data.digest())
+        generation::generate_sha512(data.as_ref())
     }
 
     pub fn len(&self) -> usize {
@@ -139,7 +139,7 @@ impl MultiHash {
     /// the result of the validator
     #[cfg(feature = "validation")]
     pub fn validate<D: AsRef<[u8]>>(&self, data: D) -> Option<validation::Result> {
-        validation::validate(self, data.digest())
+        validation::validate(self, data.as_ref())
     }
 
     pub fn digest(&self) -> &[u8] {

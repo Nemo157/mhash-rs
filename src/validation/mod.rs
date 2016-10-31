@@ -29,5 +29,5 @@ fn validate_base(multihash: &MultiHash, hash: &[u8]) -> Result {
     if multihash.len() > hash.len() {
         return Err("Digest too long".into());
     }
-    Ok(multihash.as_ref() == &hash[..multihash.len()])
+    Ok(multihash.digest() == &hash[..multihash.len()])
 }
