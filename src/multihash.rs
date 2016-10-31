@@ -1,4 +1,5 @@
 use std::fmt;
+use std::hash::{ Hash, Hasher };
 
 #[cfg(feature = "generation")] use generation;
 #[cfg(feature = "validation")] use validation;
@@ -256,6 +257,14 @@ impl PartialEq for MultiHash {
             ) => left_code == right_code && left == right,
             _ => false,
         }
+    }
+}
+
+impl Hash for MultiHash {
+    fn hash<H>(&self, state: &mut H) where H: Hasher {
+        state.write_u8(self.code());
+        state.write_usize(self.len());
+        state.write(self.digest());
     }
 }
 
