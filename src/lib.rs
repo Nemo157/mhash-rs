@@ -1,13 +1,28 @@
 #![feature(conservative_impl_trait)]
 #![feature(slice_patterns)]
 
+#![cfg_attr(feature = "parse", recursion_limit = "1024")]
+
 #[cfg(feature = "sha2")]
 extern crate sodiumoxide;
+
+#[cfg(any(feature = "parse", feature = "display"))]
+extern crate base58;
+
+#[cfg(feature = "parse")]
+#[macro_use]
+extern crate error_chain;
 
 mod multihash;
 
 mod read;
 mod write;
+
+#[cfg(feature = "parse")]
+pub mod parse;
+
+#[cfg(feature = "display")]
+mod display;
 
 #[cfg(feature = "validation")]
 pub mod validation;

@@ -8,7 +8,11 @@ default = []
 validation = []
 generation = []
 sha2 = ["sodiumoxide"]
-all = ["validation", "generation", "sha2"]
+parse = ["base58", "error-chain"]
+display = ["base58"]
+all = ["validation", "generation", "sha2", "parse", "display"]
 
 [dependencies]
+base58 = { git = "https://github.com/Nemo157/base58-rs", optional = true }
+error-chain = { version = "0.5.0", optional = true }
 sodiumoxide = { version = "*", optional = true }
