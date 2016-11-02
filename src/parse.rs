@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use base58::FromBase58;
+use bs58::FromBase58;
 
 use MultiHash;
 

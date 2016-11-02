@@ -1,6 +1,6 @@
 use std::fmt::{ Display, Formatter, Result };
 
-use base58::ToBase58;
+use bs58::ToBase58;
 
 use MultiHash;
 

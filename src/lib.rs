@@ -7,7 +7,7 @@
 extern crate sodiumoxide;
 
 #[cfg(any(feature = "parse", feature = "display"))]
-extern crate base58;
+extern crate bs58;
 
 #[cfg(feature = "parse")]
 #[macro_use]
