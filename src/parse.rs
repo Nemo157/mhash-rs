@@ -7,7 +7,12 @@ use MultiHash;
 pub use self::error::*;
 
 mod error {
+    use bs58;
+
     error_chain! {
+        foreign_links {
+            bs58::FromBase58Error, Base58;
+        }
     }
 }
 
