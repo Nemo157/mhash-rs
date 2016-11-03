@@ -67,6 +67,7 @@ pub enum MultiHash {
     },
 }
 
+#[allow(len_without_is_empty)]
 impl MultiHash {
     /// Parse a binary encoded multihash
     pub fn from_bytes<B: AsRef<[u8]>>(bytes: B) -> Result<MultiHash, String> {
@@ -109,19 +110,21 @@ impl MultiHash {
     /// The length of this multihash's digest.
     pub fn len(&self) -> usize {
         match *self {
-            Identity(ref bytes) => bytes.len(),
-            Sha1(_, length) => length,
-            Sha2_256(_, length) => length,
-            Sha2_512(_, length) => length,
-            Sha3_224(_, length) => length,
-            Sha3_256(_, length) => length,
-            Sha3_384(_, length) => length,
-            Sha3_512(_, length) => length,
-            Shake128(ref bytes) => bytes.len(),
-            Shake256(ref bytes) => bytes.len(),
-            Blake2B(_, length) => length,
-            Blake2S(_, length) => length,
-            ApplicationSpecific { ref bytes, .. } => bytes.len(),
+            Sha1(_, length)
+                | Sha2_256(_, length)
+                | Sha2_512(_, length)
+                | Sha3_224(_, length)
+                | Sha3_256(_, length)
+                | Sha3_384(_, length)
+                | Sha3_512(_, length)
+                | Blake2B(_, length)
+                | Blake2S(_, length)
+                => length,
+            Identity(ref bytes)
+                | Shake128(ref bytes)
+                | Shake256(ref bytes)
+                | ApplicationSpecific { ref bytes, .. }
+                => bytes.len(),
         }
     }
 
@@ -176,38 +179,44 @@ impl MultiHash {
     /// A reference to the bytes making up the digest of this multihash.
     pub fn digest(&self) -> &[u8] {
         match *self {
-            Identity(ref bytes) => bytes,
             Sha1(ref bytes, length) => &bytes[..length],
-            Sha2_256(ref bytes, length) => &bytes[..length],
-            Sha2_512(ref bytes, length) => &bytes[..length],
             Sha3_224(ref bytes, length) => &bytes[..length],
-            Sha3_256(ref bytes, length) => &bytes[..length],
             Sha3_384(ref bytes, length) => &bytes[..length],
-            Sha3_512(ref bytes, length) => &bytes[..length],
-            Shake128(ref bytes) => bytes,
-            Shake256(ref bytes) => bytes,
-            Blake2B(ref bytes, length) => &bytes[..length],
-            Blake2S(ref bytes, length) => &bytes[..length],
-            ApplicationSpecific { ref bytes, .. } => bytes,
+            Sha2_512(ref bytes, length)
+                | Sha3_512(ref bytes, length)
+                | Blake2B(ref bytes, length)
+                => &bytes[..length],
+            Sha2_256(ref bytes, length)
+                | Sha3_256(ref bytes, length)
+                | Blake2S(ref bytes, length)
+                => &bytes[..length],
+            Identity(ref bytes)
+                | Shake128(ref bytes)
+                | Shake256(ref bytes)
+                | ApplicationSpecific { ref bytes, .. }
+                => bytes,
         }
     }
 
     /// A mutable reference to the bytes making up the digest of this multihash.
     pub fn digest_mut(&mut self) -> &mut [u8] {
         match *self {
-            Identity(ref mut bytes) => bytes,
             Sha1(ref mut bytes, length) => &mut bytes[..length],
-            Sha2_256(ref mut bytes, length) => &mut bytes[..length],
-            Sha2_512(ref mut bytes, length) => &mut bytes[..length],
             Sha3_224(ref mut bytes, length) => &mut bytes[..length],
-            Sha3_256(ref mut bytes, length) => &mut bytes[..length],
             Sha3_384(ref mut bytes, length) => &mut bytes[..length],
-            Sha3_512(ref mut bytes, length) => &mut bytes[..length],
-            Shake128(ref mut bytes) => bytes,
-            Shake256(ref mut bytes) => bytes,
-            Blake2B(ref mut bytes, length) => &mut bytes[..length],
-            Blake2S(ref mut bytes, length) => &mut bytes[..length],
-            ApplicationSpecific { ref mut bytes, .. } => bytes,
+            Sha2_512(ref mut bytes, length)
+                | Sha3_512(ref mut bytes, length)
+                | Blake2B(ref mut bytes, length)
+                => &mut bytes[..length],
+            Sha2_256(ref mut bytes, length)
+                | Sha3_256(ref mut bytes, length)
+                | Blake2S(ref mut bytes, length)
+                => &mut bytes[..length],
+            Identity(ref mut bytes)
+                | Shake128(ref mut bytes)
+                | Shake256(ref mut bytes)
+                | ApplicationSpecific { ref mut bytes, .. }
+                => bytes,
         }
     }
 
@@ -270,25 +279,7 @@ impl Clone for MultiHash {
 impl Eq for MultiHash {}
 impl PartialEq for MultiHash {
     fn eq(&self, other: &MultiHash) -> bool {
-        match (self, other) {
-            (&Identity(ref left), &Identity(ref right)) => left == right,
-            (&Sha1(ref left, l1), &Sha1(ref right, l2)) => l1 == l2 && left[..l1] == right[..l2],
-            (&Sha2_256(ref left, l1), &Sha2_256(ref right, l2)) => l1 == l2 && left[..l1] == right[..l2],
-            (&Sha2_512(ref left, l1), &Sha2_512(ref right, l2)) => l1 == l2 && left[..l1] == right[..l2],
-            (&Sha3_224(ref left, l1), &Sha3_224(ref right, l2)) => l1 == l2 && left[..l1] == right[..l2],
-            (&Sha3_256(ref left, l1), &Sha3_256(ref right, l2)) => l1 == l2 && left[..l1] == right[..l2],
-            (&Sha3_384(ref left, l1), &Sha3_384(ref right, l2)) => l1 == l2 && left[..l1] == right[..l2],
-            (&Sha3_512(ref left, l1), &Sha3_512(ref right, l2)) => l1 == l2 && left[..l1] == right[..l2],
-            (&Shake128(ref left), &Shake128(ref right)) => left == right,
-            (&Shake256(ref left), &Shake256(ref right)) => left == right,
-            (&Blake2B(ref left, l1), &Blake2B(ref right, l2)) => l1 == l2 && left[..l1] == right[..l2],
-            (&Blake2S(ref left, l1), &Blake2S(ref right, l2)) => l1 == l2 && left[..l1] == right[..l2],
-            (
-                &ApplicationSpecific { code: left_code, bytes: ref left },
-                &ApplicationSpecific { code: right_code, bytes: ref right }
-            ) => left_code == right_code && left == right,
-            _ => false,
-        }
+        self.code() == other.code() && self.digest() == other.digest()
     }
 }
 
