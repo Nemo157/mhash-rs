@@ -25,7 +25,7 @@ pub trait ReadMultiHash {
     /// # Examples
     ///
     /// ```rust
-    /// use multihash::{ MultiHash, ReadMultiHash };
+    /// use mhash::{ MultiHash, ReadMultiHash };
     /// let mut buffer: &[u8] = &[0x11, 0x04, 0xde, 0xad, 0xbe, 0xef];
     /// assert_eq!(
     ///     MultiHash::Sha1([

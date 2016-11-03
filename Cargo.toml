@@ -1,5 +1,5 @@
 [package]
-name = "multihash"
+name = "mhash"
 version = "0.1.0"
 authors = ["Wim Looman <wim@nemo157.com>"]
 
@@ -15,5 +15,5 @@ all = ["validation", "generation", "sha2", "parse", "display"]
 [dependencies]
 bs58 = { version = "0.1.2", optional = true }
 error-chain = { version = "0.5.0" }
-sodiumoxide = { version = "*", optional = true }
+sodiumoxide = { version = "0.0.10", optional = true }
 varmint = "0.1.1"

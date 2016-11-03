@@ -21,7 +21,7 @@ pub trait WriteMultiHash {
     /// # Examples
     ///
     /// ```rust
-    /// use multihash::{ MultiHash, WriteMultiHash };
+    /// use mhash::{ MultiHash, WriteMultiHash };
     /// let mut buffer = vec![];
     /// let multihash = MultiHash::Sha1([
     ///     0xde, 0xad, 0xbe, 0xef,
