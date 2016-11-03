@@ -20,7 +20,7 @@ pub enum MultiHash {
     Blake2B([u8; 64], usize),
     Blake2S([u8; 32], usize),
     ApplicationSpecific {
-        code: u8,
+        code: usize,
         bytes: Vec<u8>,
     },
 }
@@ -28,8 +28,14 @@ pub enum MultiHash {
 impl MultiHash {
     pub fn from_bytes<B: AsRef<[u8]>>(bytes: B) -> Result<MultiHash, &'static str> {
         let bytes = bytes.as_ref();
-        let code = bytes[0];
+        let code = bytes[0] as usize;
+        if code > 0x7f {
+            panic!("TODO: support varints");
+        }
         let length = bytes[1] as usize;
+        if length > 0x7f {
+            panic!("TODO: support varints");
+        }
         let mut hash = try!(MultiHash::from_code_and_length(code, length));
         hash.digest_mut()[..length].copy_from_slice(&bytes[2..length+2]);
         Ok(hash)
@@ -37,7 +43,7 @@ impl MultiHash {
 
     // TODO: Real error type
     /// Returns an empty multihash of the specified type, validates code and length
-    pub fn from_code_and_length(code: u8, length: usize) -> Result<MultiHash, &'static str> {
+    pub fn from_code_and_length(code: usize, length: usize) -> Result<MultiHash, &'static str> {
         Ok(match code {
             0x11 if length <= 20 => Sha1([0; 20], length),
             0x12 if length <= 32 => Sha2_256([0; 32], length),
@@ -52,11 +58,8 @@ impl MultiHash {
             0x40 if length <= 64 => Blake2B([0; 64], length),
             0x41 if length <= 32 => Blake2S([0; 32], length),
 
-            _ if code < 0x10 && length < 0x7f =>
+            _ if code > 0x0400 && code < 0x040f =>
                 ApplicationSpecific { code: code, bytes: vec![0; length] },
-            _ if code > 0x7f => {
-                return Err("Codes greater than 0x7f are an unsupported future feature")
-            }
             _ => {
                 return Err("MultiHash length exceeds allowed length for specified type")
             }
@@ -109,11 +112,13 @@ impl MultiHash {
             Blake2B(..) => 0x40,
             Blake2S(..) => 0x41,
 
-            ApplicationSpecific { code, .. } if code < 0x10 => code,
+            ApplicationSpecific { code, .. } if code > 0x0400 && code < 0x040f => {
+                panic!("TODO: support varints");
+            }
 
             // TODO: could just ignore them being invalid or return Error...
             ApplicationSpecific { code, .. } =>
-                panic!("application specific code {:#02x} outside allowed range 0x00-0x0f", code),
+                panic!("application specific code {:#04x} outside allowed range 0x0400-0x040f", code),
         }
     }
 
@@ -131,7 +136,7 @@ impl MultiHash {
             Blake2B(..) => "blake2b",
             Blake2S(..) => "blake2s",
 
-            ApplicationSpecific { code, .. } if code < 0x10 => "app-specific",
+            ApplicationSpecific { code, .. } if code > 0x0400 && code < 0x040f => "app-specific",
             _ => panic!("TODO: not panic"),
         }
     }
@@ -178,11 +183,8 @@ impl MultiHash {
     }
 
     pub fn into_bytes(self) -> Vec<u8> {
-        if let ApplicationSpecific { code, mut bytes } = self {
-            let length = bytes.len() as u8;
-            bytes.insert(0, code);
-            bytes.insert(1, length);
-            bytes
+        if let ApplicationSpecific { .. } = self {
+            panic!("TODO: support varints");
         } else {
             self.to_bytes()
         }

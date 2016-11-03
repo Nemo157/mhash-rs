@@ -20,8 +20,14 @@ impl<R: io::Read> ReadHelper for R {
 
 impl<R: io::Read> ReadMultiHash for R {
     fn read_multihash(&mut self) -> io::Result<MultiHash> {
-        let code = try!(self.read_byte());
+        let code = try!(self.read_byte()) as usize;
+        if code > 0x7f {
+            panic!("TODO: support varints");
+        }
         let length = try!(self.read_byte()) as usize;
+        if length > 0x7f {
+            panic!("TODO: support varints");
+        }
         let mut hash = try!(MultiHash::from_code_and_length(code, length)
                .map_err(|err| io::Error::new(io::ErrorKind::Other, err)));
         try!(self.read_exact(&mut hash.digest_mut()[..length]));
@@ -63,7 +69,7 @@ mod tests {
 
     #[test]
     fn bad_code() {
-        let mut buffer: &[u8] = &[0x90, 0x04, 0xde, 0xad, 0xbe, 0xef];
+        let mut buffer: &[u8] = &[0x01, 0x04, 0xde, 0xad, 0xbe, 0xef];
         buffer.read_multihash().is_err();
     }
 
