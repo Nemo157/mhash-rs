@@ -1,7 +1,4 @@
-#![feature(conservative_impl_trait)]
-#![feature(slice_patterns)]
-
-#![cfg_attr(feature = "parse", recursion_limit = "1024")]
+#![recursion_limit = "1024"]
 
 #![allow(unknown_lints)] // for clippy
 #![warn(fat_ptr_transmutes)]
