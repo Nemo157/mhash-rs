@@ -25,13 +25,13 @@ extern crate sodiumoxide;
 #[cfg(any(feature = "parse", feature = "display"))]
 extern crate bs58;
 
-#[cfg(feature = "parse")]
 #[allow(unused_extern_crates)] // Only using a macro
 #[macro_use]
 extern crate error_chain;
 
 extern crate varmint;
 
+mod error;
 mod multihash;
 
 mod read;

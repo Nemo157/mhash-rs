@@ -25,7 +25,7 @@ pub trait ReadMultiHash {
     /// # Examples
     ///
     /// ```rust
-    /// use { MultiHash, ReadMultiHash };
+    /// use multihash::{ MultiHash, ReadMultiHash };
     /// let mut buffer: &[u8] = &[0x11, 0x04, 0xde, 0xad, 0xbe, 0xef];
     /// assert_eq!(
     ///     MultiHash::Sha1([
@@ -43,7 +43,7 @@ pub trait ReadMultiHash {
 impl<R: io::Read> ReadHelper for R {
     fn read_byte(&mut self) -> io::Result<u8> {
         let mut buffer = [0];
-        try!(self.read_exact(&mut buffer));
+        self.read_exact(&mut buffer)?;
         Ok(buffer[0])
     }
 }
@@ -52,9 +52,9 @@ impl<R: io::Read> ReadMultiHash for R {
     fn read_multihash(&mut self) -> io::Result<MultiHash> {
         let code = self.read_usize_varint()?;
         let length = self.read_usize_varint()?;
-        let mut hash = try!(MultiHash::from_code_and_length(code, length)
-               .map_err(|err| io::Error::new(io::ErrorKind::Other, err)));
-        try!(self.read_exact(&mut hash.digest_mut()[..length]));
+        let mut hash = MultiHash::from_code_and_length(code, length)
+               .map_err(|err| io::Error::new(io::ErrorKind::Other, err.to_string()))?;
+        self.read_exact(&mut hash.digest_mut()[..length])?;
 
         Ok(hash)
     }

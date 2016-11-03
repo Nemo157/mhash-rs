@@ -21,8 +21,8 @@ pub trait WriteMultiHash {
     /// # Examples
     ///
     /// ```rust
-    /// use { MultiHash, WriteMultiHash };
-    /// let mut buffer = [0; 6];
+    /// use multihash::{ MultiHash, WriteMultiHash };
+    /// let mut buffer = vec![];
     /// let multihash = MultiHash::Sha1([
     ///     0xde, 0xad, 0xbe, 0xef,
     ///     0x00, 0x00, 0x00, 0x00,
@@ -38,9 +38,9 @@ pub trait WriteMultiHash {
 
 impl<W> WriteMultiHash for W where W: io::Write {
     fn write_multihash(&mut self, multihash: &MultiHash) -> io::Result<()> {
-        try!(self.write_usize_varint(multihash.code()));
-        try!(self.write_usize_varint(multihash.len()));
-        try!(self.write_all(multihash.digest()));
+        self.write_usize_varint(multihash.code())?;
+        self.write_usize_varint(multihash.len())?;
+        self.write_all(multihash.digest())?;
         Ok(())
     }
 }

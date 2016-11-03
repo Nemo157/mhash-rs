@@ -3,6 +3,7 @@ use std::hash::{ Hash, Hasher };
 
 use varmint::{ self, ReadVarInt, WriteVarInt };
 
+use error;
 use MultiHash::*;
 
 /// A decoded multihash.
@@ -70,39 +71,48 @@ pub enum MultiHash {
 #[allow(len_without_is_empty)]
 impl MultiHash {
     /// Parse a binary encoded multihash
-    pub fn from_bytes<B: AsRef<[u8]>>(bytes: B) -> Result<MultiHash, String> {
+    pub fn from_bytes<B: AsRef<[u8]>>(bytes: B) -> error::from_bytes::Result<MultiHash> {
         let mut bytes = &mut bytes.as_ref();
-        let code = bytes.read_usize_varint().map_err(|e| e.to_string())?;
-        let length = bytes.read_usize_varint().map_err(|e| e.to_string())?;
+        let code = bytes.read_usize_varint()?;
+        let length = bytes.read_usize_varint()?;
         let mut hash = MultiHash::from_code_and_length(code, length)?;
         hash.digest_mut()[..length].copy_from_slice(bytes);
         Ok(hash)
     }
 
-    // TODO: Real error type
+    // TODO: Correctly use errors
     /// Create an empty multihash with the specified code and length, validates
     /// that the code is known or an application specific variant, and that the
     /// length is consistent with the multihash variant the code refers to.
-    pub fn from_code_and_length(code: usize, length: usize) -> Result<MultiHash, &'static str> {
+    pub fn from_code_and_length(code: usize, length: usize) -> error::creation::Result<MultiHash> {
+        macro_rules! array_kind {
+            ($k:ident($l:expr)) => (
+                if length <= $l {
+                    $k([0; $l], length)
+                } else {
+                    return Err(error::creation::ErrorKind::LengthTooLong(length, $l, stringify!($k)).into());
+                }
+            )
+        }
         Ok(match code {
             0x00 => Identity(vec![0; length]),
-            0x11 if length <= 20 => Sha1([0; 20], length),
-            0x12 if length <= 32 => Sha2_256([0; 32], length),
-            0x13 if length <= 64 => Sha2_512([0; 64], length),
-            0x14 if length <= 64 => Sha3_512([0; 64], length),
-            0x15 if length <= 48 => Sha3_384([0; 48], length),
-            0x16 if length <= 32 => Sha3_256([0; 32], length),
-            0x17 if length <= 28 => Sha3_224([0; 28], length),
+            0x11 => array_kind!(Sha1(20)),
+            0x12 => array_kind!(Sha2_256(32)),
+            0x13 => array_kind!(Sha2_512(64)),
+            0x14 => array_kind!(Sha3_512(64)),
+            0x15 => array_kind!(Sha3_384(48)),
+            0x16 => array_kind!(Sha3_256(32)),
+            0x17 => array_kind!(Sha3_224(28)),
             0x18 => Shake128(vec![0; length]),
             0x19 => Shake256(vec![0; length]),
 
-            0x40 if length <= 64 => Blake2B([0; 64], length),
-            0x41 if length <= 32 => Blake2S([0; 32], length),
+            0x40 => array_kind!(Blake2B(64)),
+            0x41 => array_kind!(Blake2S(32)),
 
             _ if code > 0x0400 && code < 0x040f =>
                 ApplicationSpecific { code: code, bytes: vec![0; length] },
             _ => {
-                return Err("MultiHash length exceeds allowed length for specified type")
+                return Err(error::creation::ErrorKind::UnknownCode(code).into());
             }
         })
     }
@@ -243,12 +253,12 @@ impl MultiHash {
 
 impl fmt::Debug for MultiHash {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        try!(f.write_str(self.name()));
-        try!(f.write_str("(\""));
+        f.write_str(self.name())?;
+        f.write_str("(\"")?;
         for byte in self.digest() {
-            try!(write!(f, "{:x}", byte));
+            write!(f, "{:x}", byte)?;
         }
-        try!(f.write_str("\")"));
+        f.write_str("\")")?;
         Ok(())
     }
 }
@@ -330,8 +340,8 @@ mod tests {
             0x00, 0x00, 0x00, 0x00,
         ], 4);
         assert_eq!(
-            Ok(multihash),
-            MultiHash::from_bytes([0x11, 0x04, 0xde, 0xad, 0xbe, 0xef]));
+            multihash,
+            MultiHash::from_bytes([0x11, 0x04, 0xde, 0xad, 0xbe, 0xef]).unwrap());
     }
 
     #[test]
@@ -341,7 +351,7 @@ mod tests {
             bytes: vec![0xde, 0xad, 0xbe, 0xef],
         };
         assert_eq!(
-            Ok(multihash),
-            MultiHash::from_bytes([0x81, 0x08, 0x04, 0xde, 0xad, 0xbe, 0xef]));
+            multihash,
+            MultiHash::from_bytes([0x81, 0x08, 0x04, 0xde, 0xad, 0xbe, 0xef]).unwrap());
     }
 }
