@@ -16,3 +16,4 @@ all = ["validation", "generation", "sha2", "parse", "display"]
 bs58 = { version = "0.1.2", optional = true }
 error-chain = { version = "0.5.0", optional = true }
 sodiumoxide = { version = "*", optional = true }
+varmint = "0.1.1"

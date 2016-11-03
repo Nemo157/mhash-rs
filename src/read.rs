@@ -1,5 +1,7 @@
 use std::io;
 
+use varmint::ReadVarInt;
+
 use { MultiHash };
 
 trait ReadHelper {
@@ -20,14 +22,8 @@ impl<R: io::Read> ReadHelper for R {
 
 impl<R: io::Read> ReadMultiHash for R {
     fn read_multihash(&mut self) -> io::Result<MultiHash> {
-        let code = try!(self.read_byte()) as usize;
-        if code > 0x7f {
-            panic!("TODO: support varints");
-        }
-        let length = try!(self.read_byte()) as usize;
-        if length > 0x7f {
-            panic!("TODO: support varints");
-        }
+        let code = self.read_usize_varint()?;
+        let length = self.read_usize_varint()?;
         let mut hash = try!(MultiHash::from_code_and_length(code, length)
                .map_err(|err| io::Error::new(io::ErrorKind::Other, err)));
         try!(self.read_exact(&mut hash.digest_mut()[..length]));
@@ -52,6 +48,17 @@ mod tests {
         let mut buffer: &[u8] = &[0x11, 0x04, 0xde, 0xad, 0xbe, 0xef];
         assert_eq!(
             MultiHash::Sha1(digest, 4),
+            buffer.read_multihash().unwrap());
+    }
+
+    #[test]
+    fn valid_varint() {
+        let mut buffer: &[u8] = &[0x81, 0x08, 0x04, 0xde, 0xad, 0xbe, 0xef];
+        assert_eq!(
+            MultiHash::ApplicationSpecific {
+                code: 0x0401,
+                bytes: vec![0xde, 0xad, 0xbe, 0xef],
+            },
             buffer.read_multihash().unwrap());
     }
 

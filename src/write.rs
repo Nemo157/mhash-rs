@@ -1,26 +1,17 @@
 use std::io;
 
-use { MultiHash };
+use varmint::WriteVarInt;
 
-trait WriteHelper {
-    fn write_byte(&mut self, byte: u8) -> io::Result<()>;
-}
+use MultiHash;
 
 pub trait WriteMultiHash {
     fn write_multihash(&mut self, multihash: &MultiHash) -> io::Result<()>;
 }
 
-impl<R> WriteHelper for R where R: io::Write {
-    fn write_byte(&mut self, byte: u8) -> io::Result<()> {
-        try!(self.write_all(&[byte]));
-        Ok(())
-    }
-}
-
-impl<R> WriteMultiHash for R where R: io::Write {
+impl<W> WriteMultiHash for W where W: io::Write {
     fn write_multihash(&mut self, multihash: &MultiHash) -> io::Result<()> {
-        try!(self.write_byte(multihash.code()));
-        try!(self.write_byte(multihash.len() as u8));
+        try!(self.write_usize_varint(multihash.code()));
+        try!(self.write_usize_varint(multihash.len()));
         try!(self.write_all(multihash.digest()));
         Ok(())
     }
@@ -42,5 +33,16 @@ mod tests {
         ], 4);
         buffer.write_multihash(&multihash).unwrap();
         assert_eq!(buffer, vec![0x11, 0x04, 0xde, 0xad, 0xbe, 0xef]);
+    }
+
+    #[test]
+    fn varint() {
+        let mut buffer = vec![];
+        let multihash = MultiHash::ApplicationSpecific {
+            code: 0x0401,
+            bytes: vec![0xde, 0xad, 0xbe, 0xef],
+        };
+        buffer.write_multihash(&multihash).unwrap();
+        assert_eq!(buffer, vec![0x81, 0x08, 0x04, 0xde, 0xad, 0xbe, 0xef]);
     }
 }

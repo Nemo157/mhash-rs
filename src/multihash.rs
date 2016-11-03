@@ -1,6 +1,8 @@
 use std::fmt;
 use std::hash::{ Hash, Hasher };
 
+use varmint::{ self, ReadVarInt, WriteVarInt };
+
 use MultiHash::*;
 
 #[allow(non_camel_case_types)]
@@ -24,18 +26,12 @@ pub enum MultiHash {
 }
 
 impl MultiHash {
-    pub fn from_bytes<B: AsRef<[u8]>>(bytes: B) -> Result<MultiHash, &'static str> {
-        let bytes = bytes.as_ref();
-        let code = bytes[0] as usize;
-        if code > 0x7f {
-            panic!("TODO: support varints");
-        }
-        let length = bytes[1] as usize;
-        if length > 0x7f {
-            panic!("TODO: support varints");
-        }
-        let mut hash = try!(MultiHash::from_code_and_length(code, length));
-        hash.digest_mut()[..length].copy_from_slice(&bytes[2..length+2]);
+    pub fn from_bytes<B: AsRef<[u8]>>(bytes: B) -> Result<MultiHash, String> {
+        let mut bytes = &mut bytes.as_ref();
+        let code = bytes.read_usize_varint().map_err(|e| e.to_string())?;
+        let length = bytes.read_usize_varint().map_err(|e| e.to_string())?;
+        let mut hash = MultiHash::from_code_and_length(code, length)?;
+        hash.digest_mut()[..length].copy_from_slice(bytes);
         Ok(hash)
     }
 
@@ -83,7 +79,7 @@ impl MultiHash {
         }
     }
 
-    pub fn code(&self) -> u8 {
+    pub fn code(&self) -> usize {
         match *self {
             Identity(..) => 0x00,
             Sha1(..) => 0x11,
@@ -99,12 +95,13 @@ impl MultiHash {
             Blake2S(..) => 0x41,
 
             ApplicationSpecific { code, .. } if code > 0x0400 && code < 0x040f => {
-                panic!("TODO: support varints");
+                code
             }
 
             // TODO: could just ignore them being invalid or return Error...
-            ApplicationSpecific { code, .. } =>
-                panic!("application specific code {:#04x} outside allowed range 0x0400-0x040f", code),
+            ApplicationSpecific { code, .. } => {
+                panic!("application specific code {:#04x} outside allowed range 0x0400-0x040f", code)
+            }
         }
     }
 
@@ -165,24 +162,25 @@ impl MultiHash {
     }
 
     pub fn into_bytes(self) -> Vec<u8> {
-        if let ApplicationSpecific { .. } = self {
-            panic!("TODO: support varints");
-        } else {
-            self.to_bytes()
-        }
+        self.to_bytes()
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::with_capacity(self.output_len());
-        bytes.push(self.code());
-        bytes.push(self.len() as u8);
+        {
+            let mut writer = &mut bytes;
+            writer.write_usize_varint(self.code()).unwrap();
+            writer.write_usize_varint(self.len()).unwrap();
+        }
         bytes.extend_from_slice(self.digest());
         bytes
     }
 
     /// The length of this multihash when serialized to a byte array/stream
     pub fn output_len(&self) -> usize {
-        self.len() + 2
+        varmint::len_usize_varint(self.code())
+            + varmint::len_usize_varint(self.len())
+            + self.len()
     }
 }
 
@@ -248,7 +246,7 @@ impl PartialEq for MultiHash {
 
 impl Hash for MultiHash {
     fn hash<H>(&self, state: &mut H) where H: Hasher {
-        state.write_u8(self.code());
+        state.write_usize(self.code());
         state.write_usize(self.len());
         state.write(self.digest());
     }
@@ -273,6 +271,17 @@ mod tests {
     }
 
     #[test]
+    fn to_bytes_with_varint() {
+        let multihash = MultiHash::ApplicationSpecific {
+            code: 0x0401,
+            bytes: vec![0xde, 0xad, 0xbe, 0xef],
+        };
+        assert_eq!(
+            multihash.to_bytes(),
+            vec![0x81, 0x08, 0x04, 0xde, 0xad, 0xbe, 0xef]);
+    }
+
+    #[test]
     fn from_bytes() {
         let multihash = MultiHash::Sha1([
             0xde, 0xad, 0xbe, 0xef,
@@ -284,5 +293,16 @@ mod tests {
         assert_eq!(
             Ok(multihash),
             MultiHash::from_bytes([0x11, 0x04, 0xde, 0xad, 0xbe, 0xef]));
+    }
+
+    #[test]
+    fn from_bytes_with_varint() {
+        let multihash = MultiHash::ApplicationSpecific {
+            code: 0x0401,
+            bytes: vec![0xde, 0xad, 0xbe, 0xef],
+        };
+        assert_eq!(
+            Ok(multihash),
+            MultiHash::from_bytes([0x81, 0x08, 0x04, 0xde, 0xad, 0xbe, 0xef]));
     }
 }

@@ -13,6 +13,8 @@ extern crate bs58;
 #[macro_use]
 extern crate error_chain;
 
+extern crate varmint;
+
 mod multihash;
 
 mod read;
