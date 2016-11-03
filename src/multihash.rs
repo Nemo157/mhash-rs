@@ -1,9 +1,6 @@
 use std::fmt;
 use std::hash::{ Hash, Hasher };
 
-#[cfg(feature = "generation")] use generation;
-#[cfg(feature = "validation")] use validation;
-
 use MultiHash::*;
 
 #[allow(non_camel_case_types)]
@@ -68,21 +65,6 @@ impl MultiHash {
         })
     }
 
-    #[cfg(all(feature = "generation"))]
-    pub fn generate<D: AsRef<[u8]>>(data: D) -> MultiHash {
-        generation::generate_default(data.as_ref())
-    }
-
-    #[cfg(all(feature = "generation", feature = "sha2"))]
-    pub fn generate_sha256<D: AsRef<[u8]>>(data: D) -> MultiHash {
-        generation::generate_sha256(data.as_ref())
-    }
-
-    #[cfg(all(feature = "generation", feature = "sha2"))]
-    pub fn generate_sha512<D: AsRef<[u8]>>(data: D) -> MultiHash {
-        generation::generate_sha512(data.as_ref())
-    }
-
     pub fn len(&self) -> usize {
         match *self {
             Identity(ref bytes) => bytes.len(),
@@ -144,13 +126,6 @@ impl MultiHash {
             ApplicationSpecific { code, .. } if code > 0x0400 && code < 0x040f => "app-specific",
             _ => panic!("TODO: not panic"),
         }
-    }
-
-    /// Returns None if there is no validator for this digest type, otherwise
-    /// the result of the validator
-    #[cfg(feature = "validation")]
-    pub fn validate<D: AsRef<[u8]>>(&self, data: D) -> Option<validation::Result> {
-        validation::validate(self, data.as_ref())
     }
 
     pub fn digest(&self) -> &[u8] {

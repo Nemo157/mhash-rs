@@ -9,25 +9,47 @@ use MultiHash;
 pub type Error = Cow<'static, str>; // TODO: Real error type
 pub type Result = result::Result<bool, Error>;
 
-#[cfg(not(feature = "sha2"))]
-pub fn validate(_multihash: &MultiHash, _data: &[u8]) -> Option<Result> {
-    None
+impl MultiHash {
+    /// Returns None if there is no validator for this digest type, otherwise
+    /// the result of the validator
+    pub fn validate<D: AsRef<[u8]>>(&self, data: D) -> Option<Result> {
+        use MultiHash::*;
+        let data = data.as_ref();
+        match *self {
+            Sha2_256(..) => validate_sha256(self, data),
+            Sha2_512(..) => validate_sha512(self, data),
+            _ => None
+        }
+    }
 }
 
-#[cfg(feature = "sha2")]
-pub fn validate(multihash: &MultiHash, data: &[u8]) -> Option<Result> {
-    use MultiHash::*;
-    Some(match *multihash {
-        Sha2_256(..) => sha2::validate_sha256(multihash, data),
-        Sha2_512(..) => sha2::validate_sha512(multihash, data),
-        _ => { return None; }
-    })
+macro_rules! optional_validator {
+    ($f:expr, $m:ident, $n:ident) => {
+        #[cfg(not(feature = $f))]
+        pub fn $n(_multihash: &MultiHash, _data: &[u8]) -> Option<Result> {
+            None
+        }
+
+        #[cfg(feature = $f)]
+        pub fn $n(multihash: &MultiHash, data: &[u8]) -> Option<Result> {
+            Some($m::$n(multihash, data))
+        }
+    };
 }
 
-#[cfg(feature = "sha2")]
+macro_rules! optional_validators {
+    ($f:expr, $m:ident, $($n:ident),+) => {
+        $(optional_validator!($f, $m, $n);)*
+    };
+}
+
+optional_validators!("sha2", sha2, validate_sha256, validate_sha512);
+
+#[allow(dead_code)] // Will be dead if no validators are active
 fn validate_base(multihash: &MultiHash, hash: &[u8]) -> Result {
     if multihash.len() > hash.len() {
         return Err("Digest too long".into());
     }
     Ok(multihash.digest() == &hash[..multihash.len()])
 }
+

@@ -1,13 +1,16 @@
 #[cfg(feature = "sha2")]
 mod sha2;
 
-#[cfg(feature = "sha2")]
-pub use self::sha2::{ generate_sha256, generate_sha512 };
-
 use MultiHash;
 
-// Default algorithm is sha256 for now...
-#[cfg(feature = "sha2")]
-pub fn generate_default(data: &[u8]) -> MultiHash {
-    generate_sha256(data)
+impl MultiHash {
+    #[cfg(all(feature = "generation", feature = "sha2"))]
+    pub fn generate_sha256<D: AsRef<[u8]>>(data: D) -> MultiHash {
+        sha2::generate_sha256(data.as_ref())
+    }
+
+    #[cfg(all(feature = "generation", feature = "sha2"))]
+    pub fn generate_sha512<D: AsRef<[u8]>>(data: D) -> MultiHash {
+        sha2::generate_sha512(data.as_ref())
+    }
 }
