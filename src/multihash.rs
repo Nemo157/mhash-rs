@@ -8,6 +8,7 @@ use MultiHash::*;
 
 #[allow(non_camel_case_types)]
 pub enum MultiHash {
+    Identity(Vec<u8>),
     Sha1([u8; 20], usize),
     Sha2_256([u8; 32], usize),
     Sha2_512([u8; 64], usize),
@@ -45,6 +46,7 @@ impl MultiHash {
     /// Returns an empty multihash of the specified type, validates code and length
     pub fn from_code_and_length(code: usize, length: usize) -> Result<MultiHash, &'static str> {
         Ok(match code {
+            0x00 => Identity(vec![0; length]),
             0x11 if length <= 20 => Sha1([0; 20], length),
             0x12 if length <= 32 => Sha2_256([0; 32], length),
             0x13 if length <= 64 => Sha2_512([0; 64], length),
@@ -83,6 +85,7 @@ impl MultiHash {
 
     pub fn len(&self) -> usize {
         match *self {
+            Identity(ref bytes) => bytes.len(),
             Sha1(_, length) => length,
             Sha2_256(_, length) => length,
             Sha2_512(_, length) => length,
@@ -100,6 +103,7 @@ impl MultiHash {
 
     pub fn code(&self) -> u8 {
         match *self {
+            Identity(..) => 0x00,
             Sha1(..) => 0x11,
             Sha2_256(..) => 0x12,
             Sha2_512(..) => 0x13,
@@ -124,6 +128,7 @@ impl MultiHash {
 
     pub fn name(&self) -> &'static str {
         match *self {
+            Identity(..) => "identity",
             Sha1(..) => "sha1",
             Sha2_256(..) => "sha2-256",
             Sha2_512(..) => "sha2-512",
@@ -150,6 +155,7 @@ impl MultiHash {
 
     pub fn digest(&self) -> &[u8] {
         match *self {
+            Identity(ref bytes) => bytes,
             Sha1(ref bytes, length) => &bytes[..length],
             Sha2_256(ref bytes, length) => &bytes[..length],
             Sha2_512(ref bytes, length) => &bytes[..length],
@@ -167,6 +173,7 @@ impl MultiHash {
 
     pub fn digest_mut(&mut self) -> &mut [u8] {
         match *self {
+            Identity(ref mut bytes) => bytes,
             Sha1(ref mut bytes, length) => &mut bytes[..length],
             Sha2_256(ref mut bytes, length) => &mut bytes[..length],
             Sha2_512(ref mut bytes, length) => &mut bytes[..length],
@@ -219,6 +226,7 @@ impl fmt::Debug for MultiHash {
 impl Clone for MultiHash {
     fn clone(&self) -> MultiHash {
         match *self {
+            Identity(ref bytes) => Identity(bytes.clone()),
             Sha1(ref bytes, length) => Sha1(*bytes, length),
             Sha2_256(ref bytes, length) => Sha2_256(*bytes, length),
             Sha2_512(ref bytes, length) => Sha2_512(*bytes, length),
@@ -242,6 +250,7 @@ impl Eq for MultiHash {}
 impl PartialEq for MultiHash {
     fn eq(&self, other: &MultiHash) -> bool {
         match (self, other) {
+            (&Identity(ref left), &Identity(ref right)) => left == right,
             (&Sha1(ref left, l1), &Sha1(ref right, l2)) => l1 == l2 && left[..l1] == right[..l2],
             (&Sha2_256(ref left, l1), &Sha2_256(ref right, l2)) => l1 == l2 && left[..l1] == right[..l2],
             (&Sha2_512(ref left, l1), &Sha2_512(ref right, l2)) => l1 == l2 && left[..l1] == right[..l2],
