@@ -26,6 +26,7 @@ extern crate sodiumoxide;
 extern crate bs58;
 
 #[cfg(feature = "parse")]
+#[allow(unused_extern_crates)] // Only using a macro
 #[macro_use]
 extern crate error_chain;
 
@@ -37,16 +38,16 @@ mod read;
 mod write;
 
 #[cfg(feature = "parse")]
-pub mod parse;
+mod parse;
 
 #[cfg(feature = "display")]
 mod display;
 
 #[cfg(feature = "validation")]
-pub mod validation;
+mod validation;
 
 #[cfg(feature = "generation")]
-pub mod generation;
+mod generation;
 
 pub use multihash::MultiHash;
 
