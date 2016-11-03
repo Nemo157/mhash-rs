@@ -6,6 +6,11 @@ rust:
   - beta
   - stable
 
+addons:
+  apt:
+    packages:
+      - libsodium-dev
+
 env:
   global:
     - secure: "FpZeFoLtP5TI911Ru2/trVbXTVhooW1sKf3sNrWmJKn+XPXyPlCM1c0JU3o2kXEeTCQuKshFP3itDHziqkqfEjzBZCUpJaFLsyuBWOZiNUuve2mqknDmI4PTxLzj6PjrBZBAdxNasPyEPlLOeZ2nr7QvkjpISqr1s4hBRQuULkd0FUyGEKDEvKpwvhjyDc+eSTEF0d/JIdUMgZMsBNwxQ3SWyWaIL/1tjdBQryyDmuUNNkYyzG18j5Mrflg9dq1srtqoyVvri65QIGDNc7HJyupnUbTZlEguwN+7S/P06o/GpzyfXlD+ulXaF84/+jOU6U5RPLyuZ5vi+9zDK4V1QuCUnu3WAZdfnHTZo83Z2TibnPTR5VgMiZlZNmX2UHPm84/av79Brt+1K1ulIBPAFmafCo2L91yZcc9taKke3l8DOBfodY1OFVGNaFh7O8I1vZEF2wIu2gxJqbPI5aRznwtMKixXn/Kw9bRWSWRd/kThHZnCbS0tATtNMb4GVUPlHK9kOh8ScXJACgYvDUaP3IONBcJCQzZ2qbSLMBBQ/HG7eToY5hidhU0UZePKIenWv9LfmKJ8XEXdOFbpMNMgTu5VGuBoV2Q6DmbCMeXLEWRCuyc26Ld4oUBkhVPpGcjWLfd+TlpfR8+HvFROmJaUcUKIxhZS6r1HwLG3bIUX/XM="
