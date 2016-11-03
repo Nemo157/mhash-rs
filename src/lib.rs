@@ -3,6 +3,7 @@
 
 #![cfg_attr(feature = "parse", recursion_limit = "1024")]
 
+#![allow(unknown_lints)] // for clippy
 #![warn(fat_ptr_transmutes)]
 #![warn(missing_copy_implementations)]
 #![warn(missing_debug_implementations)]
