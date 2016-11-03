@@ -2,13 +2,41 @@ use std::io;
 
 use varmint::ReadVarInt;
 
-use { MultiHash };
+use MultiHash;
 
 trait ReadHelper {
     fn read_byte(&mut self) -> io::Result<u8>;
 }
 
+/// A trait to allow reading a `MultiHash` from an object.
+///
+/// This is primarily intended to provide support for the `io::Read` trait,
+/// allowing reading a `MultiHash` from a stream without knowing how many bytes
+/// need to be extracted before reading starts.
 pub trait ReadMultiHash {
+    /// Read a `MultiHash` from this object.
+    ///
+    /// # Errors
+    ///
+    /// Any errors encountered when reading from the underlying `io::Read`
+    /// stream will be propagated out, if that happens an undefined number of
+    /// bytes will already have been consumed from the stream.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use { MultiHash, ReadMultiHash };
+    /// let mut buffer: &[u8] = &[0x11, 0x04, 0xde, 0xad, 0xbe, 0xef];
+    /// assert_eq!(
+    ///     MultiHash::Sha1([
+    ///         0xde, 0xad, 0xbe, 0xef,
+    ///         0x00, 0x00, 0x00, 0x00,
+    ///         0x00, 0x00, 0x00, 0x00,
+    ///         0x00, 0x00, 0x00, 0x00,
+    ///         0x00, 0x00, 0x00, 0x00,
+    ///     ], 4),
+    ///     buffer.read_multihash().unwrap());
+    /// ```
     fn read_multihash(&mut self) -> io::Result<MultiHash>;
 }
 

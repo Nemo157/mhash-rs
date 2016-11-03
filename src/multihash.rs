@@ -5,27 +5,70 @@ use varmint::{ self, ReadVarInt, WriteVarInt };
 
 use MultiHash::*;
 
+/// A decoded multihash.
 #[allow(non_camel_case_types)]
 pub enum MultiHash {
+    /// A straight copy of the data supposedly hashed.
+    /// May be a prefix rather than a full copy.
     Identity(Vec<u8>),
+
+    /// A 160-bit [SHA-1][] digest + length.
+    /// [SHA-1]: https://en.wikipedia.org/wiki/SHA-1
     Sha1([u8; 20], usize),
+
+    /// A 256-bit [SHA-2][] digest + length.
+    /// [SHA-2]: https://en.wikipedia.org/wiki/SHA-2
     Sha2_256([u8; 32], usize),
+
+    /// A 512-bit [SHA-2][] digest + length.
+    /// [SHA-2]: https://en.wikipedia.org/wiki/SHA-2
     Sha2_512([u8; 64], usize),
+
+    /// A 512-bit [SHA-3][] digest + length.
+    /// [SHA-3]: https://en.wikipedia.org/wiki/SHA-3
     Sha3_512([u8; 64], usize),
+
+    /// A 384-bit [SHA-3][] digest + length.
+    /// [SHA-3]: https://en.wikipedia.org/wiki/SHA-3
     Sha3_384([u8; 48], usize),
+
+    /// A 256-bit [SHA-3][] digest + length.
+    /// [SHA-3]: https://en.wikipedia.org/wiki/SHA-3
     Sha3_256([u8; 32], usize),
+
+    /// A 224-bit [SHA-3][] digest + length.
+    /// [SHA-3]: https://en.wikipedia.org/wiki/SHA-3
     Sha3_224([u8; 28], usize),
+
+    /// A variable size [SHAKE-128][] digest.
+    /// [SHAKE-128]: https://en.wikipedia.org/wiki/SHA-3
     Shake128(Vec<u8>),
+
+    /// A variable size [SHAKE-256][] digest.
+    /// [SHAKE-256]: https://en.wikipedia.org/wiki/SHA-3
     Shake256(Vec<u8>),
+
+    /// A 512-bit [BLAKE2b][] digest.
+    /// [BLAKE2b]: https://en.wikipedia.org/wiki/BLAKE_(hash_function)#BLAKE2
     Blake2B([u8; 64], usize),
+
+    /// A 256-bit [BLAKE2s][] digest.
+    /// [BLAKE2s]: https://en.wikipedia.org/wiki/BLAKE_(hash_function)#BLAKE2
     Blake2S([u8; 32], usize),
+
+    /// An application specific MultiHash variant.
     ApplicationSpecific {
+        /// The application specific code for this variant, must be in the
+        /// range [0x0400, 0x040f].
         code: usize,
+
+        /// The digest for this hash.
         bytes: Vec<u8>,
     },
 }
 
 impl MultiHash {
+    /// Parse a binary encoded multihash
     pub fn from_bytes<B: AsRef<[u8]>>(bytes: B) -> Result<MultiHash, String> {
         let mut bytes = &mut bytes.as_ref();
         let code = bytes.read_usize_varint().map_err(|e| e.to_string())?;
@@ -36,7 +79,9 @@ impl MultiHash {
     }
 
     // TODO: Real error type
-    /// Returns an empty multihash of the specified type, validates code and length
+    /// Create an empty multihash with the specified code and length, validates
+    /// that the code is known or an application specific variant, and that the
+    /// length is consistent with the multihash variant the code refers to.
     pub fn from_code_and_length(code: usize, length: usize) -> Result<MultiHash, &'static str> {
         Ok(match code {
             0x00 => Identity(vec![0; length]),
@@ -61,6 +106,7 @@ impl MultiHash {
         })
     }
 
+    /// The length of this multihash's digest.
     pub fn len(&self) -> usize {
         match *self {
             Identity(ref bytes) => bytes.len(),
@@ -79,6 +125,7 @@ impl MultiHash {
         }
     }
 
+    /// The code specifying this multihash variant.
     pub fn code(&self) -> usize {
         match *self {
             Identity(..) => 0x00,
@@ -105,6 +152,7 @@ impl MultiHash {
         }
     }
 
+    /// The string representation of this multihash type.
     pub fn name(&self) -> &'static str {
         match *self {
             Identity(..) => "identity",
@@ -125,6 +173,7 @@ impl MultiHash {
         }
     }
 
+    /// A reference to the bytes making up the digest of this multihash.
     pub fn digest(&self) -> &[u8] {
         match *self {
             Identity(ref bytes) => bytes,
@@ -143,6 +192,7 @@ impl MultiHash {
         }
     }
 
+    /// A mutable reference to the bytes making up the digest of this multihash.
     pub fn digest_mut(&mut self) -> &mut [u8] {
         match *self {
             Identity(ref mut bytes) => bytes,
@@ -161,10 +211,7 @@ impl MultiHash {
         }
     }
 
-    pub fn into_bytes(self) -> Vec<u8> {
-        self.to_bytes()
-    }
-
+    /// Create a `Vec<u8>` with the binary encoding of this multihash.
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::with_capacity(self.output_len());
         {
@@ -176,7 +223,8 @@ impl MultiHash {
         bytes
     }
 
-    /// The length of this multihash when serialized to a byte array/stream
+    /// The length this multihash will use when serialized to a byte
+    /// array/stream.
     pub fn output_len(&self) -> usize {
         varmint::len_usize_varint(self.code())
             + varmint::len_usize_varint(self.len())
