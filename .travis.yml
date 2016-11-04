@@ -6,29 +6,26 @@ rust:
   - beta
 # - stable # one week till ? can be used :(
 
-addons:
-  apt:
-    packages:
-      - libsodium-dev
-
 env:
   global:
     - secure: "FpZeFoLtP5TI911Ru2/trVbXTVhooW1sKf3sNrWmJKn+XPXyPlCM1c0JU3o2kXEeTCQuKshFP3itDHziqkqfEjzBZCUpJaFLsyuBWOZiNUuve2mqknDmI4PTxLzj6PjrBZBAdxNasPyEPlLOeZ2nr7QvkjpISqr1s4hBRQuULkd0FUyGEKDEvKpwvhjyDc+eSTEF0d/JIdUMgZMsBNwxQ3SWyWaIL/1tjdBQryyDmuUNNkYyzG18j5Mrflg9dq1srtqoyVvri65QIGDNc7HJyupnUbTZlEguwN+7S/P06o/GpzyfXlD+ulXaF84/+jOU6U5RPLyuZ5vi+9zDK4V1QuCUnu3WAZdfnHTZo83Z2TibnPTR5VgMiZlZNmX2UHPm84/av79Brt+1K1ulIBPAFmafCo2L91yZcc9taKke3l8DOBfodY1OFVGNaFh7O8I1vZEF2wIu2gxJqbPI5aRznwtMKixXn/Kw9bRWSWRd/kThHZnCbS0tATtNMb4GVUPlHK9kOh8ScXJACgYvDUaP3IONBcJCQzZ2qbSLMBBQ/HG7eToY5hidhU0UZePKIenWv9LfmKJ8XEXdOFbpMNMgTu5VGuBoV2Q6DmbCMeXLEWRCuyc26Ld4oUBkhVPpGcjWLfd+TlpfR8+HvFROmJaUcUKIxhZS6r1HwLG3bIUX/XM="
   matrix:
     - FEATURES=''
-    - FEATURES='validation'
-    - FEATURES='generation'
-    - FEATURES='validation sha2'
-    - FEATURES='generation sha2'
-    - FEATURES='parse'
-    - FEATURES='display'
+    - FEATURES='default'
     - FEATURES='all'
 
 before_script:
+  # Taken from https://github.com/dnaq/sodiumoxide/blob/fa480ffde10050f6f6f9da40df2ae572e3684d01/.travis.yml
+  - wget https://github.com/jedisct1/libsodium/releases/download/1.0.8/libsodium-1.0.8.tar.gz
+  - tar xvfz libsodium-1.0.8.tar.gz
+  - cd libsodium-1.0.8 && ./configure --prefix=$HOME/installed_libsodium && make && make install &&
+    cd ..
+  - export PKG_CONFIG_PATH=$HOME/installed_libsodium/lib/pkgconfig:$PKG_CONFIG_PATH
+  - export LD_LIBRARY_PATH=$HOME/installed_libsodium/lib:$LD_LIBRARY_PATH
   - sh -c 'if [[ "$TRAVIS_RUST_VERSION" == "nightly" ]]; then cargo install clippy; fi'
 
 script:
-  - cargo test --features "$FEATURES"
+  - cargo test --no-default-features --features "$FEATURES"
   - sh -c 'if [[ "$TRAVIS_RUST_VERSION" == "nightly" ]]; then cargo clippy -- -D warnings; fi'
 
 before_deploy:
