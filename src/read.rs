@@ -25,19 +25,15 @@ pub trait ReadMultiHash {
     /// # Examples
     ///
     /// ```rust
-    /// use mhash::{ MultiHash, ReadMultiHash };
+    /// use mhash::{ MultiHash, MultiHashVariant, ReadMultiHash };
     /// let mut buffer: &[u8] = &[0x11, 0x04, 0xde, 0xad, 0xbe, 0xef];
     /// assert_eq!(
-    ///     MultiHash::Sha1([
-    ///         0xde, 0xad, 0xbe, 0xef,
-    ///         0x00, 0x00, 0x00, 0x00,
-    ///         0x00, 0x00, 0x00, 0x00,
-    ///         0x00, 0x00, 0x00, 0x00,
-    ///         0x00, 0x00, 0x00, 0x00,
-    ///     ], 4),
-    ///     buffer.read_multihash().unwrap());
+    ///     MultiHash::new(MultiHashVariant::Sha1, [0xde, 0xad, 0xbe, 0xef])
+    ///         .unwrap(),
+    ///     buffer.read_multihash()
+    ///         .unwrap());
     /// ```
-    fn read_multihash(&mut self) -> io::Result<MultiHash>;
+    fn read_multihash(&mut self) -> io::Result<MultiHash<Vec<u8>>>;
 }
 
 impl<R: io::Read> ReadHelper for R {
@@ -49,33 +45,26 @@ impl<R: io::Read> ReadHelper for R {
 }
 
 impl<R: io::Read> ReadMultiHash for R {
-    fn read_multihash(&mut self) -> io::Result<MultiHash> {
+    fn read_multihash(&mut self) -> io::Result<MultiHash<Vec<u8>>> {
         let code = self.read_usize_varint()?;
         let length = self.read_usize_varint()?;
-        let mut hash = MultiHash::from_code_and_length(code, length)
-               .map_err(|err| io::Error::new(io::ErrorKind::Other, err.to_string()))?;
-        self.read_exact(&mut hash.digest_mut()[..length])?;
-
-        Ok(hash)
+        let mut bytes = vec![0; length];
+        self.read_exact(&mut bytes)?;
+        MultiHash::new_with_code(code, bytes)
+               .map_err(|err| io::Error::new(io::ErrorKind::Other, err.to_string()))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use { MultiHash, ReadMultiHash };
+    use { MultiHash, MultiHashVariant, ReadMultiHash };
 
     #[test]
     fn valid() {
-        let digest = [
-            0xde, 0xad, 0xbe, 0xef,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
-        ];
         let mut buffer: &[u8] = &[0x11, 0x04, 0xde, 0xad, 0xbe, 0xef];
         assert_eq!(
-            MultiHash::Sha1(digest, 4),
+            MultiHash::new(MultiHashVariant::Sha1, [0xde, 0xad, 0xbe, 0xef])
+                .unwrap(),
             buffer.read_multihash().unwrap());
     }
 
@@ -83,10 +72,8 @@ mod tests {
     fn valid_varint() {
         let mut buffer: &[u8] = &[0x81, 0x08, 0x04, 0xde, 0xad, 0xbe, 0xef];
         assert_eq!(
-            MultiHash::ApplicationSpecific {
-                code: 0x0401,
-                bytes: vec![0xde, 0xad, 0xbe, 0xef],
-            },
+            MultiHash::new_with_code(0x0401, [0xde, 0xad, 0xbe, 0xef])
+                .unwrap(),
             buffer.read_multihash().unwrap());
     }
 

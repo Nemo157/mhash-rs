@@ -21,23 +21,19 @@ pub trait WriteMultiHash {
     /// # Examples
     ///
     /// ```rust
-    /// use mhash::{ MultiHash, WriteMultiHash };
+    /// use mhash::{ MultiHash, MultiHashVariant, WriteMultiHash };
     /// let mut buffer = vec![];
-    /// let multihash = MultiHash::Sha1([
-    ///     0xde, 0xad, 0xbe, 0xef,
-    ///     0x00, 0x00, 0x00, 0x00,
-    ///     0x00, 0x00, 0x00, 0x00,
-    ///     0x00, 0x00, 0x00, 0x00,
-    ///     0x00, 0x00, 0x00, 0x00,
-    /// ], 4);
+    /// let multihash = MultiHash::new(
+    ///     MultiHashVariant::Sha1,
+    ///     [0xde, 0xad, 0xbe, 0xef]).unwrap();
     /// buffer.write_multihash(&multihash).unwrap();
     /// assert_eq!(buffer, [0x11, 0x04, 0xde, 0xad, 0xbe, 0xef]);
     /// ```
-    fn write_multihash(&mut self, multihash: &MultiHash) -> io::Result<()>;
+    fn write_multihash<D: AsRef<[u8]>>(&mut self, multihash: &MultiHash<D>) -> io::Result<()>;
 }
 
 impl<W> WriteMultiHash for W where W: io::Write {
-    fn write_multihash(&mut self, multihash: &MultiHash) -> io::Result<()> {
+    fn write_multihash<D: AsRef<[u8]>>(&mut self, multihash: &MultiHash<D>) -> io::Result<()> {
         self.write_usize_varint(multihash.code())?;
         self.write_usize_varint(multihash.len())?;
         self.write_all(multihash.digest())?;
@@ -47,29 +43,24 @@ impl<W> WriteMultiHash for W where W: io::Write {
 
 #[cfg(test)]
 mod tests {
-    use { MultiHash, WriteMultiHash };
+    use { MultiHash, MultiHashVariant, WriteMultiHash };
 
     #[test]
     fn valid() {
+        let multihash = MultiHash::new(
+            MultiHashVariant::Sha1,
+            [0xde, 0xad, 0xbe, 0xef]).unwrap();
         let mut buffer = vec![];
-        let multihash = MultiHash::Sha1([
-            0xde, 0xad, 0xbe, 0xef,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
-        ], 4);
         buffer.write_multihash(&multihash).unwrap();
         assert_eq!(buffer, vec![0x11, 0x04, 0xde, 0xad, 0xbe, 0xef]);
     }
 
     #[test]
     fn varint() {
+        let multihash = MultiHash::new_with_code(
+            0x401,
+            [0xde, 0xad, 0xbe, 0xef]).unwrap();
         let mut buffer = vec![];
-        let multihash = MultiHash::ApplicationSpecific {
-            code: 0x0401,
-            bytes: vec![0xde, 0xad, 0xbe, 0xef],
-        };
         buffer.write_multihash(&multihash).unwrap();
         assert_eq!(buffer, vec![0x81, 0x08, 0x04, 0xde, 0xad, 0xbe, 0xef]);
     }
