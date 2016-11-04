@@ -2,13 +2,15 @@
 #![allow(missing_docs)] // Caused by error_chain!
 
 pub mod creation {
+    use MultiHashVariant;
+
     error_chain! {
         errors {
-            LengthTooLong(length: usize, max_length: usize, kind: &'static str) {
+            LengthTooLong(variant: MultiHashVariant, length: usize) {
                 description("multihash length too long")
                 display(
                     "multihash length {} longer than max length {} for hash kind {}",
-                    length, max_length, kind)
+                    length, variant.max_len(), variant.name())
             }
             UnknownCode(code: usize) {
                 description("unknown multihash code")
@@ -18,6 +20,7 @@ pub mod creation {
     }
 }
 
+#[cfg(feature = "vec")]
 pub mod from_bytes {
     use std::io;
     use super::creation;
@@ -30,10 +33,19 @@ pub mod from_bytes {
         foreign_links {
             io::Error, Io;
         }
+
+        errors {
+            WrongLengthGiven(length: usize, expected_length: usize) {
+                description("given Vec<u8> was too long")
+                display(
+                    "given Vec<u8> had {} bytes but contained a {} byte multihash",
+                    length, expected_length)
+            }
+        }
     }
 }
 
-#[cfg(feature = "parse")]
+#[cfg(feature = "str")]
 pub mod parse {
     use bs58;
     use super::from_bytes;

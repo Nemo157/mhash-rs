@@ -4,16 +4,17 @@ version = "0.1.0"
 authors = ["Wim Looman <wim@nemo157.com>"]
 
 [features]
-default = []
+default = ["io", "str", "vec"]
+io = ["varmint"]
+vec = ["varmint"]
+str = ["bs58", "vec"]
 validation = []
 generation = []
 sha2 = ["sodiumoxide"]
-parse = ["bs58"]
-display = ["bs58"]
-all = ["validation", "generation", "sha2", "parse", "display"]
+all = ["validation", "generation", "sha2", "str", "vec", "io"]
 
 [dependencies]
 bs58 = { version = "0.1.2", optional = true }
 error-chain = { version = "0.5.0" }
 sodiumoxide = { version = "0.0.10", optional = true }
-varmint = "0.1.1"
+varmint = { version = "0.1.1", optional = true }

@@ -20,26 +20,29 @@
 #[cfg(feature = "sha2")]
 extern crate sodiumoxide;
 
-#[cfg(any(feature = "parse", feature = "display"))]
+#[cfg(feature = "str")]
 extern crate bs58;
 
 #[allow(unused_extern_crates)] // Only using a macro
 #[macro_use]
 extern crate error_chain;
 
+#[cfg(any(feature = "vec", feature = "io"))]
 extern crate varmint;
 
 mod error;
 mod multihash;
+mod variant;
 
+#[cfg(feature = "io")]
 mod read;
+#[cfg(feature = "io")]
 mod write;
 
-#[cfg(feature = "parse")]
-mod parse;
-
-#[cfg(feature = "display")]
-mod display;
+#[cfg(feature = "vec")]
+mod multihash_vec;
+#[cfg(feature = "str")]
+mod multihash_str;
 
 #[cfg(feature = "validation")]
 mod validation;
@@ -48,6 +51,9 @@ mod validation;
 mod generation;
 
 pub use multihash::MultiHash;
+pub use variant::MultiHashVariant;
 
+#[cfg(feature = "io")]
 pub use read::ReadMultiHash;
+#[cfg(feature = "io")]
 pub use write::WriteMultiHash;
