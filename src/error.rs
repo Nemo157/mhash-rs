@@ -1,5 +1,6 @@
 #![allow(trivial_casts)] // Caused by error_chain!
 #![allow(missing_docs)] // Caused by error_chain!
+#![allow(redundant_closure)] // Caused by error_chain!
 
 pub mod creation {
     use MultiHashVariant;

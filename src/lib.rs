@@ -7,7 +7,6 @@
 #![warn(missing_docs)]
 #![warn(trivial_casts)]
 #![warn(trivial_numeric_casts)]
-#![warn(unused_extern_crates)]
 #![warn(unused_import_braces)]
 #![warn(unused_results)]
 #![warn(variant_size_differences)]
@@ -23,7 +22,6 @@ extern crate sodiumoxide;
 #[cfg(feature = "str")]
 extern crate bs58;
 
-#[allow(unused_extern_crates)] // Only using a macro
 #[macro_use]
 extern crate error_chain;
 
