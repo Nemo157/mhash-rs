@@ -113,19 +113,13 @@ impl MultiHashVariant {
     /// The maximum digest length allowed for this multihash variant.
     pub fn max_len(self) -> usize {
         match self {
-            Identity => usize::max_value(),
             Sha1 => 20,
-            Sha2_256 => 32,
-            Sha2_512 => 64,
-            Sha3_512 => 64,
-            Sha3_384 => 48,
-            Sha3_256 => 32,
             Sha3_224 => 28,
-            Shake128 => usize::max_value(),
-            Shake256 => usize::max_value(),
-            Blake2B => 64,
-            Blake2S => 32,
-            ApplicationSpecific { .. } => usize::max_value(),
+            Sha2_256 | Sha3_256 | Blake2S => 32,
+            Sha3_384 => 48,
+            Sha2_512 | Sha3_512 | Blake2B => 64,
+            Identity | Shake128 | Shake256 | ApplicationSpecific { .. }
+                => usize::max_value(),
             __Nonexhaustive => unreachable!(),
         }
     }
