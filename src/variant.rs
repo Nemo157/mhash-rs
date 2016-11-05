@@ -9,31 +9,31 @@ pub enum MultiHashVariant {
     /// May be a prefix rather than a full copy.
     Identity,
 
-    /// A 160-bit [SHA-1][] digest + length.
+    /// A 160-bit [SHA-1][] digest.
     /// [SHA-1]: https://en.wikipedia.org/wiki/SHA-1
     Sha1,
 
-    /// A 256-bit [SHA-2][] digest + length.
+    /// A 256-bit [SHA-2][] digest.
     /// [SHA-2]: https://en.wikipedia.org/wiki/SHA-2
     Sha2_256,
 
-    /// A 512-bit [SHA-2][] digest + length.
+    /// A 512-bit [SHA-2][] digest.
     /// [SHA-2]: https://en.wikipedia.org/wiki/SHA-2
     Sha2_512,
 
-    /// A 512-bit [SHA-3][] digest + length.
+    /// A 512-bit [SHA-3][] digest.
     /// [SHA-3]: https://en.wikipedia.org/wiki/SHA-3
     Sha3_512,
 
-    /// A 384-bit [SHA-3][] digest + length.
+    /// A 384-bit [SHA-3][] digest.
     /// [SHA-3]: https://en.wikipedia.org/wiki/SHA-3
     Sha3_384,
 
-    /// A 256-bit [SHA-3][] digest + length.
+    /// A 256-bit [SHA-3][] digest.
     /// [SHA-3]: https://en.wikipedia.org/wiki/SHA-3
     Sha3_256,
 
-    /// A 224-bit [SHA-3][] digest + length.
+    /// A 224-bit [SHA-3][] digest.
     /// [SHA-3]: https://en.wikipedia.org/wiki/SHA-3
     Sha3_224,
 
