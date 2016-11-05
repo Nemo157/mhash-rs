@@ -8,14 +8,14 @@ impl MultiHash<Vec<u8>> {
     pub fn from_bytes(mut bytes: Vec<u8>) -> error::from_bytes::Result<MultiHash<Vec<u8>>> {
         let (code, length) = {
             let mut reader: &mut &[u8] = &mut &*bytes;
-            (reader.read_usize_varint()?, reader.read_usize_varint()?)
+            (try!(reader.read_usize_varint()), try!(reader.read_usize_varint()))
         };
         let offset = varmint::len_usize_varint(code) + varmint::len_usize_varint(length);
         if bytes.len() != length + offset {
             return Err(error::from_bytes::ErrorKind::WrongLengthGiven(bytes.len(), length + offset).into());
         }
         let bytes = bytes.split_off(offset);
-        Ok(MultiHash::new_with_code(code, bytes)?)
+        Ok(try!(MultiHash::new_with_code(code, bytes)))
     }
 }
 

@@ -96,8 +96,8 @@ impl MultiHashVariant {
     /// that the code is known or an application specific variant, and that the
     /// length is consistent with the multihash variant the code refers to.
     pub fn from_code_and_length(code: usize, length: usize) -> error::creation::Result<MultiHashVariant> {
-        let variant = MultiHashVariant::from_code(code)?;
-        variant.check_length(length)?;
+        let variant = try!(MultiHashVariant::from_code(code));
+        try!(variant.check_length(length));
         Ok(variant)
     }
 

@@ -39,17 +39,17 @@ pub trait ReadMultiHash {
 impl<R: io::Read> ReadHelper for R {
     fn read_byte(&mut self) -> io::Result<u8> {
         let mut buffer = [0];
-        self.read_exact(&mut buffer)?;
+        try!(self.read_exact(&mut buffer));
         Ok(buffer[0])
     }
 }
 
 impl<R: io::Read> ReadMultiHash for R {
     fn read_multihash(&mut self) -> io::Result<MultiHash<Vec<u8>>> {
-        let code = self.read_usize_varint()?;
-        let length = self.read_usize_varint()?;
+        let code = try!(self.read_usize_varint());
+        let length = try!(self.read_usize_varint());
         let mut bytes = vec![0; length];
-        self.read_exact(&mut bytes)?;
+        try!(self.read_exact(&mut bytes));
         MultiHash::new_with_code(code, bytes)
                .map_err(|err| io::Error::new(io::ErrorKind::Other, err.to_string()))
     }
