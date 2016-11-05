@@ -4,7 +4,7 @@ use error;
 use MultiHashVariant;
 
 /// A decoded multihash.
-#[derive(Eq, Clone, Copy)]
+#[derive(Eq, Clone, Copy, Hash)]
 pub struct MultiHash<D: AsRef<[u8]>> {
     variant: MultiHashVariant,
     digest: D,
