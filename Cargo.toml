@@ -1,6 +1,6 @@
 [package]
 name = "mhash"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Wim Looman <wim@nemo157.com>"]
 
 description = "An implementation of the multihash format used in IPFS"
