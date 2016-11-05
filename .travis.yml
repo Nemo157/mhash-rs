@@ -23,7 +23,7 @@ before_script:
   - export PKG_CONFIG_PATH=$HOME/installed_libsodium/lib/pkgconfig:$PKG_CONFIG_PATH
   - export LD_LIBRARY_PATH=$HOME/installed_libsodium/lib:$LD_LIBRARY_PATH
   - bash -c 'if [[ "$TRAVIS_RUST_VERSION" == "nightly" ]]; then
-      cargo install clippy;
+      cargo install clippy --force;
     fi'
 
 script:
