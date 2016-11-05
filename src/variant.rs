@@ -1,7 +1,7 @@
 use error;
 use self::MultiHashVariant::*;
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Hash)]
 #[allow(non_camel_case_types)]
 /// The possible multihash variants.
 pub enum MultiHashVariant {
