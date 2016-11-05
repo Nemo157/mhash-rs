@@ -3,6 +3,15 @@ name = "mhash"
 version = "0.1.0"
 authors = ["Wim Looman <wim@nemo157.com>"]
 
+description = "An implementation of the multihash format used in IPFS"
+
+repository = "https://github.com/mycorrhiza/mhash-rs"
+
+readme = "README.md"
+keywords = ["multihash", "multiformats", "hash", "sha"]
+
+license = "MIT/Apache-2.0"
+
 [features]
 default = ["io", "str", "vec"]
 io = ["varmint"]
