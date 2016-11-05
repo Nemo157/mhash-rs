@@ -15,7 +15,7 @@ impl<D: AsRef<[u8]>> MultiHash<D> {
     /// Create a new multihash with the specified variant and digest. Validates
     /// the length of the digest is consistent with the multihash variant.
     pub fn new(variant: MultiHashVariant, bytes: D) -> error::creation::Result<MultiHash<D>> {
-        variant.check_length(bytes.as_ref().len())?;
+        try!(variant.check_length(bytes.as_ref().len()));
         Ok(MultiHash { variant: variant, digest: bytes })
     }
 
@@ -23,7 +23,7 @@ impl<D: AsRef<[u8]>> MultiHash<D> {
     /// that the code is known or an application specific variant, and that the
     /// length is consistent with the multihash variant the code refers to.
     pub fn new_with_code(code: usize, bytes: D) -> error::creation::Result<MultiHash<D>> {
-        let variant = MultiHashVariant::from_code(code)?;
+        let variant = try!(MultiHashVariant::from_code(code));
         MultiHash::new(variant, bytes)
     }
 
@@ -55,12 +55,12 @@ impl<D: AsRef<[u8]>> MultiHash<D> {
 
 impl<D: AsRef<[u8]>> fmt::Debug for MultiHash<D> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(self.name())?;
-        f.write_str("(\"")?;
+        try!(f.write_str(self.name()));
+        try!(f.write_str("(\""));
         for byte in self.digest() {
-            write!(f, "{:x}", byte)?;
+            try!(write!(f, "{:x}", byte));
         }
-        f.write_str("\")")?;
+        try!(f.write_str("\")"));
         Ok(())
     }
 }

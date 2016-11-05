@@ -15,7 +15,7 @@ impl<D: AsRef<[u8]>> Display for MultiHash<D> {
 impl FromStr for MultiHash<Vec<u8>> {
     type Err = error::parse::Error;
     fn from_str(s: &str) -> error::parse::Result<MultiHash<Vec<u8>>> {
-        Ok(MultiHash::from_bytes(s.from_base58()?)?)
+        Ok(try!(MultiHash::from_bytes(try!(s.from_base58()))))
     }
 }
 
