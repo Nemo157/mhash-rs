@@ -28,12 +28,12 @@ pub trait ReadMultiHash {
     /// use mhash::{ MultiHash, MultiHashVariant, ReadMultiHash };
     /// let mut buffer: &[u8] = &[0x11, 0x04, 0xde, 0xad, 0xbe, 0xef];
     /// assert_eq!(
-    ///     MultiHash::new(MultiHashVariant::Sha1, [0xde, 0xad, 0xbe, 0xef])
+    ///     MultiHash::new(MultiHashVariant::Sha1, &[0xde, 0xad, 0xbe, 0xef])
     ///         .unwrap(),
     ///     buffer.read_multihash()
     ///         .unwrap());
     /// ```
-    fn read_multihash(&mut self) -> io::Result<MultiHash<Vec<u8>>>;
+    fn read_multihash(&mut self) -> io::Result<MultiHash>;
 }
 
 impl<R: io::Read> ReadHelper for R {
@@ -45,12 +45,12 @@ impl<R: io::Read> ReadHelper for R {
 }
 
 impl<R: io::Read> ReadMultiHash for R {
-    fn read_multihash(&mut self) -> io::Result<MultiHash<Vec<u8>>> {
+    fn read_multihash(&mut self) -> io::Result<MultiHash> {
         let code = try!(self.read_usize_varint());
         let length = try!(self.read_usize_varint());
         let mut bytes = vec![0; length];
         try!(self.read_exact(&mut bytes));
-        MultiHash::new_with_code(code, bytes)
+        MultiHash::new_with_code(code, &bytes)
                .map_err(|err| io::Error::new(io::ErrorKind::Other, err.to_string()))
     }
 }
@@ -63,7 +63,7 @@ mod tests {
     fn valid() {
         let mut buffer: &[u8] = &[0x11, 0x04, 0xde, 0xad, 0xbe, 0xef];
         assert_eq!(
-            MultiHash::new(MultiHashVariant::Sha1, [0xde, 0xad, 0xbe, 0xef])
+            MultiHash::new(MultiHashVariant::Sha1, &[0xde, 0xad, 0xbe, 0xef])
                 .unwrap(),
             buffer.read_multihash().unwrap());
     }
@@ -72,7 +72,7 @@ mod tests {
     fn valid_varint() {
         let mut buffer: &[u8] = &[0x81, 0x08, 0x04, 0xde, 0xad, 0xbe, 0xef];
         assert_eq!(
-            MultiHash::new_with_code(0x0401, [0xde, 0xad, 0xbe, 0xef])
+            MultiHash::new_with_code(0x0401, &[0xde, 0xad, 0xbe, 0xef])
                 .unwrap(),
             buffer.read_multihash().unwrap());
     }

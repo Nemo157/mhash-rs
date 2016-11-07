@@ -28,6 +28,8 @@ extern crate error_chain;
 #[cfg(any(feature = "vec", feature = "io"))]
 extern crate varmint;
 
+extern crate smallvec;
+
 pub mod error;
 mod multihash;
 mod variant;
