@@ -1,35 +1,37 @@
 use std::fmt;
 
+use smallvec::SmallVec;
+
 use error;
 use MultiHashVariant;
 
 /// A decoded multihash.
-#[derive(Eq, Clone, Copy, Hash)]
-pub struct MultiHash<D: AsRef<[u8]>> {
+#[derive(Eq, PartialEq, Clone, Hash)]
+pub struct MultiHash {
     variant: MultiHashVariant,
-    digest: D,
+    digest: SmallVec<[u8; 64]>,
 }
 
 #[allow(len_without_is_empty)]
-impl<D: AsRef<[u8]>> MultiHash<D> {
+impl MultiHash {
     /// Create a new multihash with the specified variant and digest. Validates
     /// the length of the digest is consistent with the multihash variant.
-    pub fn new(variant: MultiHashVariant, bytes: D) -> error::creation::Result<MultiHash<D>> {
-        try!(variant.check_length(bytes.as_ref().len()));
-        Ok(MultiHash { variant: variant, digest: bytes })
+    pub fn new(variant: MultiHashVariant, digest: &[u8]) -> error::creation::Result<MultiHash> {
+        try!(variant.check_length(digest.len()));
+        Ok(MultiHash { variant: variant, digest: digest.into() })
     }
 
     /// Create a new multihash with the specified code and digest, validates
     /// that the code is known or an application specific variant, and that the
     /// length is consistent with the multihash variant the code refers to.
-    pub fn new_with_code(code: usize, bytes: D) -> error::creation::Result<MultiHash<D>> {
+    pub fn new_with_code(code: usize, digest: &[u8]) -> error::creation::Result<MultiHash> {
         let variant = try!(MultiHashVariant::from_code(code));
-        MultiHash::new(variant, bytes)
+        MultiHash::new(variant, digest)
     }
 
     /// The length of this multihash's digest.
     pub fn len(&self) -> usize {
-        self.digest.as_ref().len()
+        self.digest.len()
     }
 
     /// This multihash's variant.
@@ -49,11 +51,11 @@ impl<D: AsRef<[u8]>> MultiHash<D> {
 
     /// A reference to the bytes making up the digest of this multihash.
     pub fn digest(&self) -> &[u8] {
-        self.digest.as_ref()
+        &self.digest
     }
 }
 
-impl<D: AsRef<[u8]>> fmt::Debug for MultiHash<D> {
+impl fmt::Debug for MultiHash {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         try!(f.write_str(self.name()));
         try!(f.write_str("(\""));
@@ -62,11 +64,5 @@ impl<D: AsRef<[u8]>> fmt::Debug for MultiHash<D> {
         }
         try!(f.write_str("\")"));
         Ok(())
-    }
-}
-
-impl<D: AsRef<[u8]>, E: AsRef<[u8]>> PartialEq<MultiHash<E>> for MultiHash<D> {
-    fn eq(&self, other: &MultiHash<E>) -> bool {
-        self.variant == other.variant && self.digest() == other.digest()
     }
 }

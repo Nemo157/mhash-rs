@@ -3,24 +3,19 @@ use varmint::{ self, ReadVarInt, WriteVarInt };
 use error;
 use MultiHash;
 
-impl MultiHash<Vec<u8>> {
+impl MultiHash {
     /// Parse a binary encoded multihash
-    pub fn from_bytes(mut bytes: Vec<u8>) -> error::from_bytes::Result<MultiHash<Vec<u8>>> {
-        let (code, length) = {
-            let mut reader: &mut &[u8] = &mut &*bytes;
-            (try!(reader.read_usize_varint()), try!(reader.read_usize_varint()))
-        };
-        let offset = varmint::len_usize_varint(code) + varmint::len_usize_varint(length);
-        if bytes.len() != length + offset {
-            return Err(error::from_bytes::ErrorKind::WrongLengthGiven(bytes.len(), length + offset).into());
+    pub fn from_bytes(mut bytes: &[u8]) -> error::from_bytes::Result<MultiHash> {
+        let (code, length) = (try!(bytes.read_usize_varint()), try!(bytes.read_usize_varint()));
+        if bytes.len() != length {
+            return Err(error::from_bytes::ErrorKind::WrongLengthGiven(bytes.len(), length).into());
         }
-        let bytes = bytes.split_off(offset);
         Ok(try!(MultiHash::new_with_code(code, bytes)))
     }
 }
 
 
-impl<D: AsRef<[u8]>> MultiHash<D> {
+impl MultiHash {
     /// Create a `Vec<u8>` with the binary encoding of this multihash.
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::with_capacity(self.output_len());
@@ -49,34 +44,34 @@ mod tests {
     #[test]
     fn to_bytes() {
         assert_eq!(
-            MultiHash::new(MultiHashVariant::Sha1, [0xde, 0xad, 0xbe, 0xef])
+            MultiHash::new(MultiHashVariant::Sha1, &[0xde, 0xad, 0xbe, 0xef])
                 .unwrap().to_bytes(),
-            vec![0x11, 0x04, 0xde, 0xad, 0xbe, 0xef]);
+            &[0x11, 0x04, 0xde, 0xad, 0xbe, 0xef]);
     }
 
     #[test]
     fn to_bytes_with_varint() {
         assert_eq!(
-            MultiHash::new_with_code(0x401, [0xde, 0xad, 0xbe, 0xef])
+            MultiHash::new_with_code(0x401, &[0xde, 0xad, 0xbe, 0xef])
                 .unwrap().to_bytes(),
-            vec![0x81, 0x08, 0x04, 0xde, 0xad, 0xbe, 0xef]);
+            &[0x81, 0x08, 0x04, 0xde, 0xad, 0xbe, 0xef]);
     }
 
     #[test]
     fn from_bytes() {
         assert_eq!(
-            MultiHash::new(MultiHashVariant::Sha1, [0xde, 0xad, 0xbe, 0xef])
+            MultiHash::new(MultiHashVariant::Sha1, &[0xde, 0xad, 0xbe, 0xef])
                 .unwrap(),
-            MultiHash::from_bytes(vec![0x11, 0x04, 0xde, 0xad, 0xbe, 0xef])
+            MultiHash::from_bytes(&[0x11, 0x04, 0xde, 0xad, 0xbe, 0xef])
                 .unwrap());
     }
 
     #[test]
     fn from_bytes_with_varint() {
         assert_eq!(
-            MultiHash::new_with_code(0x401, [0xde, 0xad, 0xbe, 0xef])
+            MultiHash::new_with_code(0x401, &[0xde, 0xad, 0xbe, 0xef])
                 .unwrap(),
-            MultiHash::from_bytes(vec![0x81, 0x08, 0x04, 0xde, 0xad, 0xbe, 0xef])
+            MultiHash::from_bytes(&[0x81, 0x08, 0x04, 0xde, 0xad, 0xbe, 0xef])
                 .unwrap());
     }
 }

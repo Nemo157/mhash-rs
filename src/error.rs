@@ -37,9 +37,9 @@ pub mod from_bytes {
 
         errors {
             WrongLengthGiven(length: usize, expected_length: usize) {
-                description("given Vec<u8> was too long")
+                description("given slice was the wrong length")
                 display(
-                    "given Vec<u8> had {} bytes but contained a {} byte multihash",
+                    "given slice had {} bytes of digest but contained a multihash with a {} byte digest",
                     length, expected_length)
             }
         }
