@@ -9,11 +9,16 @@ changes will be accepted please check them with `cargo clippy` (available via
 `cargo install clippy` on nightly rust) before submitting a pull request (along
 with `cargo test` as usual).
 
+Both the nightly date and clippy version used in CI are pinned in the
+`.travis.yml` as clippy sometimes breaks for a few days after a new nightly is
+published, feel free to update to a new known good pair anytime as part of a
+pull request.
+
 There are a few different features available as they affect the dependencies
 that are brought in and are not needed for all cases. Most of the time you
-should be able to get away with testing with no features and with `cargo test
---features all` to enable all of them at once. CI builds both of these along
-with some different subsets that are likely to be enabled together.
+should be able to get away with testing with `cargo test --all-features` to
+enable all of them at once. CI builds a few different subsets that are likely to
+be enabled together.
 
 ## License
 
