@@ -6,11 +6,11 @@ use MultiHash;
 impl MultiHash {
     /// Parse a binary encoded multihash
     pub fn from_bytes(mut bytes: &[u8]) -> error::from_bytes::Result<MultiHash> {
-        let (code, length) = (try!(bytes.read_usize_varint()), try!(bytes.read_usize_varint()));
+        let (code, length) = (bytes.read_usize_varint()?, bytes.read_usize_varint()?);
         if bytes.len() != length {
             return Err(error::from_bytes::ErrorKind::WrongLengthGiven(bytes.len(), length).into());
         }
-        Ok(try!(MultiHash::new_with_code(code, bytes)))
+        Ok(MultiHash::new_with_code(code, bytes)?)
     }
 }
 
