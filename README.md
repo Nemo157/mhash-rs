@@ -1,4 +1,4 @@
-# mhash [![travis-badge][]][travis] [![cargo-badge][]][cargo] ![license-badge][]
+# mhash [![travis-badge][]][travis] [![cargo-badge][]][cargo] ![license-badge][] [![rust-version-badge][]][rust-version]
 
 A Rust implementation of the [multihash][] format as used in [IPFS][].
 
@@ -35,6 +35,8 @@ additional terms or conditions.
 [cargo-badge]: https://img.shields.io/crates/v/mhash.svg?style=flat-square
 [cargo]: https://crates.io/crates/mhash
 [license-badge]: https://img.shields.io/badge/license-MIT/Apache--2.0-lightgray.svg?style=flat-square
+[rust-version-badge]: https://img.shields.io/badge/rust-1.13+-blue.svg?style=flat-square
+[rust-version]: .travis.yml#L5
 
 [multihash]: https://github.com/multiformats/multihash
 [ipfs]: https://ipfs.io
