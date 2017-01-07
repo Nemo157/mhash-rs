@@ -23,7 +23,7 @@ sha2 = ["sodiumoxide"]
 all = ["validation", "generation", "sha2", "str", "vec", "io"]
 
 [dependencies]
-bs58 = { version = "0.1.2", optional = true }
+bs58 = { version = "0.2.0", optional = true }
 error-chain = "0.5.0"
 smallvec = "0.2.1"
 sodiumoxide = { version = "0.0.10", optional = true }

@@ -57,7 +57,7 @@ pub mod parse {
         }
 
         foreign_links {
-            bs58::FromBase58Error, Base58;
+            bs58::decode::DecodeError, Base58;
         }
     }
 }
