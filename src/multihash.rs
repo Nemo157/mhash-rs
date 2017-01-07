@@ -17,7 +17,7 @@ impl MultiHash {
     /// Create a new multihash with the specified variant and digest. Validates
     /// the length of the digest is consistent with the multihash variant.
     pub fn new(variant: MultiHashVariant, digest: &[u8]) -> error::creation::Result<MultiHash> {
-        try!(variant.check_length(digest.len()));
+        variant.check_length(digest.len())?;
         Ok(MultiHash { variant: variant, digest: digest.into() })
     }
 
@@ -25,7 +25,7 @@ impl MultiHash {
     /// that the code is known or an application specific variant, and that the
     /// length is consistent with the multihash variant the code refers to.
     pub fn new_with_code(code: usize, digest: &[u8]) -> error::creation::Result<MultiHash> {
-        let variant = try!(MultiHashVariant::from_code(code));
+        let variant = MultiHashVariant::from_code(code)?;
         MultiHash::new(variant, digest)
     }
 
@@ -57,12 +57,12 @@ impl MultiHash {
 
 impl fmt::Debug for MultiHash {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        try!(f.write_str(self.name()));
-        try!(f.write_str("(\""));
+        f.write_str(self.name())?;
+        f.write_str("(\"")?;
         for byte in self.digest() {
-            try!(write!(f, "{:x}", byte));
+            write!(f, "{:x}", byte)?;
         }
-        try!(f.write_str("\")"));
+        f.write_str("\")")?;
         Ok(())
     }
 }

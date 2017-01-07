@@ -2,17 +2,19 @@ language: rust
 sudo: true
 cache: cargo
 rust:
-  - nightly
-  - beta
+  - 1.13.0
   - stable
+  - beta
+  - nightly-2017-01-06
 
 env:
   global:
+    - CLIPPY_VERSION=0.0.106
     - secure: "FpZeFoLtP5TI911Ru2/trVbXTVhooW1sKf3sNrWmJKn+XPXyPlCM1c0JU3o2kXEeTCQuKshFP3itDHziqkqfEjzBZCUpJaFLsyuBWOZiNUuve2mqknDmI4PTxLzj6PjrBZBAdxNasPyEPlLOeZ2nr7QvkjpISqr1s4hBRQuULkd0FUyGEKDEvKpwvhjyDc+eSTEF0d/JIdUMgZMsBNwxQ3SWyWaIL/1tjdBQryyDmuUNNkYyzG18j5Mrflg9dq1srtqoyVvri65QIGDNc7HJyupnUbTZlEguwN+7S/P06o/GpzyfXlD+ulXaF84/+jOU6U5RPLyuZ5vi+9zDK4V1QuCUnu3WAZdfnHTZo83Z2TibnPTR5VgMiZlZNmX2UHPm84/av79Brt+1K1ulIBPAFmafCo2L91yZcc9taKke3l8DOBfodY1OFVGNaFh7O8I1vZEF2wIu2gxJqbPI5aRznwtMKixXn/Kw9bRWSWRd/kThHZnCbS0tATtNMb4GVUPlHK9kOh8ScXJACgYvDUaP3IONBcJCQzZ2qbSLMBBQ/HG7eToY5hidhU0UZePKIenWv9LfmKJ8XEXdOFbpMNMgTu5VGuBoV2Q6DmbCMeXLEWRCuyc26Ld4oUBkhVPpGcjWLfd+TlpfR8+HvFROmJaUcUKIxhZS6r1HwLG3bIUX/XM="
   matrix:
-    - FEATURES=''
-    - FEATURES='default'
-    - FEATURES='all'
+    - FEATURES='--no-default-features' # No features
+    - FEATURES=''                      # Default features
+    - FEATURES='--all-features'        # All features
 
 before_script:
   # Taken from https://github.com/dnaq/sodiumoxide/blob/fa480ffde10050f6f6f9da40df2ae572e3684d01/.travis.yml
@@ -22,15 +24,15 @@ before_script:
     cd ..
   - export PKG_CONFIG_PATH=$HOME/installed_libsodium/lib/pkgconfig:$PKG_CONFIG_PATH
   - export LD_LIBRARY_PATH=$HOME/installed_libsodium/lib:$LD_LIBRARY_PATH
-  - bash -c 'if [[ "$TRAVIS_RUST_VERSION" == "nightly" ]]; then
-      cargo install clippy --force;
-    fi'
+  - case "$TRAVIS_RUST_VERSION" in nightly*)
+      cargo install clippy --vers $CLIPPY_VERSION --force;
+    esac
 
 script:
-  - cargo test --no-default-features --features "$FEATURES"
-  - bash -c 'if [[ "$TRAVIS_RUST_VERSION" == "nightly" ]]; then
-      cargo clippy --features "$FEATURES" -- -D warnings;
-    fi'
+  - cargo test $FEATURES
+  - case "$TRAVIS_RUST_VERSION" in nightly*)
+      cargo clippy $FEATURES -- -D warnings;
+    esac
 
 before_deploy:
   - rm libsodium-1.0.8.tar.gz
@@ -44,4 +46,4 @@ deploy:
   on:
     tags: true
     all_branches: true
-    condition: "$TRAVIS_RUST_VERSION = stable && $FEATURES = 'all'"
+    condition: "$TRAVIS_RUST_VERSION = stable && $FEATURES = '--all-features'"
